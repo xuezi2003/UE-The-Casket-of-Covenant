@@ -1,0 +1,20 @@
+{
+    "name": "the-casket-of-covenant-docs",
+    "version": "1.0.0",
+    "description": "契约之匣 - UE5 游戏项目设计文档",
+    "scripts": {
+        "docs:dev": "vitepress dev docs",
+        "docs:build": "vitepress build docs",
+        "docs:preview": "vitepress preview docs"
+    },
+    "keywords": [
+        "UE5",
+        "游戏设计",
+        "文档"
+    ],
+    "author": "",
+    "license": "MIT",
+    "devDependencies": {
+        "vitepress": "^1.0.0"
+    }
+}
