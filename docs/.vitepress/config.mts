@@ -2,6 +2,7 @@ import { defineConfig } from 'vitepress'
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
+    base: '/UE-The-Casket-of-Covenant/',
     title: "契约之匣",
     description: "The Casket of Covenant - UE5 游戏项目设计文档",
     lang: 'zh-CN',
