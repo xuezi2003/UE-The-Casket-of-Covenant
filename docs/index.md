@@ -51,13 +51,13 @@ Design/
 
 | 类 | 父类 | 生命周期 | 详细文档 |
 |:---|:-----|:---------|:---------|
-| `GI_FiveBox` | AdvancedFriendsGameInstance | 全局永久 | [链接](core/class/GI_FiveBox.md) |
-| `GM_Core` | GameModeBase | 关卡级 | [链接](core/class/GM_Core.md) |
-| `GS_Core` | GameStateBase | 关卡级 | [链接](core/class/GS_Core.md) |
-| `PS_FiveBox` | GSCModularPlayerState | 跨关卡 | [链接](core/class/PS_FiveBox.md) |
-| `PC_Core` | GSCModularPlayerController | 跨关卡 | [链接](core/class/PC_Core.md) |
-| `BP_Character_Game` | GSCModularCharacter | 关卡级 | [链接](core/class/BP_Character_Game.md) |
-| `AIC_Game` | AAIController | 关卡级 | [链接](core/class/AIC_Game.md) |
+| `GI_FiveBox` | AdvancedFriendsGameInstance | 全局永久 | [链接](核心系统/核心类/GI_FiveBox.md) |
+| `GM_Core` | GameModeBase | 关卡级 | [链接](核心系统/核心类/GM_Core.md) |
+| `GS_Core` | GameStateBase | 关卡级 | [链接](核心系统/核心类/GS_Core.md) |
+| `PS_FiveBox` | GSCModularPlayerState | 跨关卡 | [链接](核心系统/核心类/PS_FiveBox.md) |
+| `PC_Core` | GSCModularPlayerController | 跨关卡 | [链接](核心系统/核心类/PC_Core.md) |
+| `BP_Character_Game` | GSCModularCharacter | 关卡级 | [链接](核心系统/核心类/BP_Character_Game.md) |
+| `AIC_Game` | AAIController | 关卡级 | [链接](核心系统/核心类/AIC_Game.md) |
 
 ---
 

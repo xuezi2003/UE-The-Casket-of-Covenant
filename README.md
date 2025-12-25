@@ -1,69 +1,38 @@
 # 契约之匣 - The Casket of Covenant
 
-> UE5 多人游戏项目设计文档
+> UE5 多人游戏项目的设计文档（纯 Markdown 版）
 
-## 📚 在线文档
+文档以普通 Markdown 形式保留在 `docs/` 目录，可直接阅读。
 
-访问在线文档：[https://xuezi2003.github.io/UE-The-Casket-of-Covenant/](https://xuezi2003.github.io/UE-The-Casket-of-Covenant/)
+## 文档浏览
 
-## 🚀 本地开发
+- 入口：`docs/index.md`（项目概览、技术栈与目录索引）
+- 其他章节：`docs/开发指南/`、`docs/核心系统/`、`docs/关卡设计/`、`docs/参考文档/`、`docs/进度跟踪/`
 
-### 安装依赖
+建议在支持 Markdown 的阅读器或 IDE 中直接打开阅读，无需构建或预览流程。
 
-```bash
-npm install
-```
-
-### 启动开发服务器
-
-```bash
-npm run docs:dev
-```
-
-访问 `http://localhost:5173` 查看文档。
-
-### 构建生产版本
-
-```bash
-npm run docs:build
-```
-
-### 预览生产版本
-
-```bash
-npm run docs:preview
-```
-
-## 📝 文档结构
+## 目录结构
 
 ```
 docs/
-├── index.md              # 首页
-├── guide/                # 开发指南
-├── core/                 # 核心系统
-│   └── class/            # 核心类文档
-├── levels/               # 关卡设计
+├── index.md              # 首页（概览与索引）
+├── 开发指南/              # 开发指南
+├── 核心系统/              # 核心系统
+│   └── 核心类/            # 核心类文档
+├── 关卡设计/              # 关卡设计
 │   ├── 01-耐力之匣/
 │   ├── 02-逻辑之匣/
 │   ├── 03-勇气之匣/
 │   ├── 04-洞察之匣/
 │   └── 05-牺牲之匣/
-├── reference/            # 参考文档
-└── progress/             # 进度跟踪
+├── 参考文档/              # 参考文档
+└── 进度跟踪/              # 进度跟踪
 ```
 
-## 🔧 技术栈
+## 更新说明
 
-- **文档框架**: [VitePress](https://vitepress.dev/)
-- **部署**: GitHub Pages
-- **自动化**: GitHub Actions
+直接编辑 `docs/` 目录下的 Markdown 文件即可更新，无需构建或部署步骤。
 
-## 📖 更新文档
-
-1. 编辑 `docs/` 目录下的 Markdown 文件
-2. 提交并推送到 `main` 分支
-3. GitHub Actions 会自动构建并部署到 GitHub Pages
-
-## 📄 许可证
+## 许可证
 
 MIT License
