@@ -9,7 +9,7 @@
 | 项目 | 值 |
 |:-----|:---|
 | **类名** | `BP_Character_Game` |
-| **父类** | `GSCModularCharacter`（GAS Companion） |
+| **父类** | `GSCModularPlayerStateCharacter`（GAS Companion） |
 | **生命周期** | 关卡级（ServerTravel 时销毁） |
 | **使用者** | 玩家（PC_Game 控制）、AI（AIC_Game 控制） |
 
@@ -76,8 +76,38 @@
 
 ## 外观系统
 
+### 初始化逻辑
+
+**触发点**: BeginPlay → WaitForPlayerState Timer → InitPS
+
+**流程**:
+```
+1. BeginPlay:
+   - Set Timer by Function Name ("WaitForPlayerState", Looping)
+
+2. WaitForPlayerState:
+   - Get Player State → Cast to PS_FiveBox
+   - If Valid:
+       → Clear Timer
+       → InitPS(PS)
+
+3. InitPS(PS):
+   - Bind Event to PS.OnPlayerAvatarChange → HandleAvatarChange
+   - Bind Event to PS.OnPlayerNumChange → HandleNumChange
+   - 手动调用: HandleNumChange(PS.PlayerNum)
+   - 手动调用: HandleAvatarChange(PS.AvatarData)
+
+4. Handle Functions:
+   - HandleNumChange → InitPlayerNum
+   - HandleAvatarChange → InitPlayerAvatar
+```
+
+> [!IMPORTANT]
+> InitPS 中必须手动调用一次 Handle 函数，否则会错过已有数据。
+
+**数据来源**:
 | 项目 | 说明 |
 |:-----|:-----|
-| 编号显示 | 材质参数，从 PS 获取 PlayerNum |
-| 头像显示 | 材质参数，从 PS 获取 AvatarData |
+| 编号显示 | 材质参数，从 PS 获取 PlayerNum (从 1 开始) |
+| 头像显示 | 材质参数，从 PS 获取 AvatarData (各 Index 从 1 开始) |
 | 淘汰变灰 | 材质参数切换 |

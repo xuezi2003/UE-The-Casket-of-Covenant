@@ -89,9 +89,9 @@ if "Sacrifice" → RunBehaviorTree(BT_AI_Sacrifice)
 
 ---
 
-## 使用 Logic Driver Pro
+## 使用 State Tree
 
-行为树使用 Logic Driver Pro 插件创建，优势：
+行为逻辑使用 UE5 内置 State Tree 系统，优势：
 - 可视化编辑
 - 蓝图支持
-- 与状态机统一
+- 引擎原生，无需第三方插件

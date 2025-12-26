@@ -29,6 +29,14 @@ GameStateBase
 
 ---
 
+## GS_Core 组件
+
+| 组件 | 类型 | 说明 |
+|:-----|:-----|:-----|
+| `StateTreeComponent` | UE5 State Tree | 关卡流程状态机。**配置**：<br> - Asset: `ST_LevelFlow`<br> - Start Logic Automatically: `True`<br> - Component Replicates: `False` (仅服务器运行，结果通过 RepNotify 同步) |
+
+---
+
 ## GS_Core 同步数据（Replicated）
 
 | 属性 | 类型 | 说明 |
@@ -36,6 +44,15 @@ GameStateBase
 | `RemainingTime` | Float | 剩余时间 |
 | `CurrentPhase` | Enum | 当前阶段（Preparing / InProgress / Settlement） |
 | `PlayerRecords` | Array | 玩家记录数组 |
+| `AlivePlayers` | Int (RepNotify) | 存活玩家数 |
+| `PreparationTime` | Float | 准备阶段时长（秒） |
+
+## GS_Core 事件委托
+
+| 事件 | 说明 |
+|:-----|:-----|
+| `OnPhaseChanged` | 阶段切换时广播，参数: `NewPhase(E_LevelPhase)` |
+| `OnAliveChanged` | 存活人数变化时广播，参数: `NewAlive(Int)` |
 
 ---
 
@@ -69,7 +86,10 @@ GameStateBase
 | `GetAliveHumanCount` | 获取存活真人数 |
 | `MarkPlayerEliminated(PlayerNum)` | 标记玩家淘汰 |
 | `GetPlayerRecord(PlayerNum)` | 获取玩家记录 |
-| `Multicast_OnPhaseChanged(Phase)` | 广播阶段切换 |
+| `Server_SetPhase(NewPhase)` | 服务器设置阶段，修改变量并调用 Handle |
+| `HandlePhaseChange(NewPhase)` | 本地广播: Call OnPhaseChanged (UI更新) |
+| `Server_SetAlivePlayerCnt(NewCnt)` | 服务器设置存活数，修改变量并调用 Handle |
+| `HandleAliveChanged(NewCnt)` | 本地广播: Call OnAliveChanged |
 
 ---
 

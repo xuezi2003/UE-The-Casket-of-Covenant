@@ -35,19 +35,27 @@
 
 ### 同步属性（Replicated）
 
-| 属性 | 类型 | 说明 |
-|:-----|:-----|:-----|
-| `PlayerNum` | Int | 编号（Lobby 分配，全程不变） |
-| `AvatarData` | Struct | 头像数据 |
-| `bIsHuman` | Bool | 真人 / AI |
+| 属性 | 类型 | 复制方式 | 默认值 | 说明 |
+|:-----|:-----|:---------|:-------|:-----|
+| `PlayerNum` | Int | RepNotify | -1 | 编号（Lobby 分配，全程不变，-1表示未分配） |
+| `AvatarData` | Struct | Replicated | 全0 | 头像数据 (HairIndex, EyeIndex, FaceIndex, ColorIndex) |
+| `bIsHuman` | Bool | Replicated | true | 真人 / AI |
+
+### 事件分发器 (Event Dispatchers)
+
+| 事件 | 参数 | 触发时机 | 说明 |
+|:-----|:-----|:---------|:-----|
+| `OnPlayerNumChange` | `NewNum` (Int) | OnRep_PlayerNum | 编号变化時通知订阅者 (Character) |
+| `OnPlayerAvatarChange` | `NewAvatar` (F_AvatarData) | OnRep_AvatarData | 头像变化時通知订阅者 (Character) |
 
 ### GAS AttributeSet（使用 Blueprint Attributes）
 
-| 属性 | 初始值 | 跨关卡 | 说明 |
-|:-----|:-------|:-------|:-----|
-| `Health` | 100 | 每关重置 | 当前 HP |
-| `MaxHealth` | 100 | 保留 | 最大 HP |
-| `Coins` | 初始值 | 保留 | 金币（死亡时掉落清零） |
+> 属性集 `BAS_Core` 通过 `GSCAbilitySystemComponent` 的 **Default Starting Data** 绑定。
+
+| 属性 | 初始值 | Clamping | 跨关卡 | 说明 |
+|:-----|:-------|:---------|:-------|:-----|
+| `Health` | 100 | 0~100 (DataTable) | 每关重置 | 当前 HP |
+| `Coins` | 0 | 0~∞ | 保留 | 金币（死亡时掉落清零） |
 
 ---
 

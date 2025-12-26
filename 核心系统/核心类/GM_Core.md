@@ -62,6 +62,7 @@ GameModeBase
 
 | 函数 | 说明 |
 |:-----|:-----|
+| `HandleStartingNewPlayer(NewPlayer)` | 玩家登录后分配编号，更新 GS.PlayerRecords<br>1. **⚠️ 必须先调用 Parent: HandleStartingNewPlayer** (生成Pawn)<br>2. 分配 PlayerNum (GS.PlayerRecords.Length **+ 1**, 从 1 开始)<br>3. 生成随机头像 (BPL_Common.RandomAvatar, Index 从 1 开始)<br>4. 更新 GS.PlayerRecords |
 | `EliminatePlayer(PS)` | 淘汰玩家（踢出 + 标记） |
 | `InstantKillPlayer(PS)` | 即死（违规） |
 | `OnPlayerDisconnected(PS)` | 掉线 → AI 接管 |

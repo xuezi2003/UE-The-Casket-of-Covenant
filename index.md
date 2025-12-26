@@ -7,25 +7,23 @@
 ## 文件夹结构
 
 ```
-Design/
-├── 00-核心系统/
-│   ├── 系统架构.md           # 核心类总览、技术选型、GAS/Logic Driver 规范
+.
+├── 核心系统/
+│   ├── 系统架构.md           # 核心类总览、技术选型、GAS/State Tree 规范
 │   ├── 整体流程.md           # 关卡流程、编号/淘汰/金币/HP 系统
 │   └── 核心类/               # 各核心类详细文档
-├── 01-耐力之匣/
-│   └── 关卡设计.md
-├── 02-逻辑之匣/
-│   └── 关卡设计.md
-├── 03-勇气之匣/
-│   └── 关卡设计.md
-├── 04-洞察之匣/
-│   └── 关卡设计.md
-├── 05-牺牲之匣/
-│   └── 关卡设计.md
+├── 关卡设计/
+│   ├── 01-耐力之匣/
+│   ├── 02-逻辑之匣/
+│   ├── 03-勇气之匣/
+│   ├── 04-洞察之匣/
+│   └── 05-牺牲之匣/
 ├── 参考文档/
 │   ├── 命名规范.md           # 资源命名前缀、文件夹组织规范
 │   ├── 插件整理.md           # 插件列表
+│   ├── 插件文档链接.md       # 插件官方文档链接
 │   └── 素材整理.md           # 动画/模型/UI 素材
+├── 进度跟踪/
 └── README.md
 ```
 
@@ -37,7 +35,7 @@ Design/
 |:-----|:-----|
 | 引擎 | Unreal Engine 5 |
 | 能力系统 | GAS Companion + Blueprint Attributes |
-| 状态机/行为树 | Logic Driver Pro |
+| 状态机/行为树 | State Tree (引擎内置) |
 | 联机插件 | Advanced Sessions |
 | 开发联机 | Null Online Subsystem (LAN) |
 | 发布联机 | Steam Online Subsystem |
@@ -56,7 +54,7 @@ Design/
 | `GS_Core` | GameStateBase | 关卡级 | [链接](核心系统/核心类/GS_Core.md) |
 | `PS_FiveBox` | GSCModularPlayerState | 跨关卡 | [链接](核心系统/核心类/PS_FiveBox.md) |
 | `PC_Core` | GSCModularPlayerController | 跨关卡 | [链接](核心系统/核心类/PC_Core.md) |
-| `BP_Character_Game` | GSCModularCharacter | 关卡级 | [链接](核心系统/核心类/BP_Character_Game.md) |
+| `BP_Character_Game` | GSCModularPlayerStateCharacter | 关卡级 | [链接](核心系统/核心类/BP_Character_Game.md) |
 | `AIC_Game` | AAIController | 关卡级 | [链接](核心系统/核心类/AIC_Game.md) |
 
 ---
