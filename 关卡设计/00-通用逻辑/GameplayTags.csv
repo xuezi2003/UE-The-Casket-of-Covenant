@@ -1,0 +1,10 @@
+Name,Tag,DevComment
+Match,Match,"游戏比赛逻辑的根标签"
+Match.Phase,Match.Phase,"管理游戏线性流程的父标签"
+Match.Phase.Main,Match.Phase.Main,"跨关卡通用的主流程阶段"
+Match.Phase.Main.Preparing,Match.Phase.Main.Preparing,"准备阶段：处理玩家登记、数据填充与倒计时"
+Match.Phase.Main.InProgress,Match.Phase.Main.InProgress,"进行中阶段：名单已锁定且比赛正式开始"
+Match.Phase.Main.Settlement,Match.Phase.Main.Settlement,"结算阶段：展示结果与 MVP"
+Match.Status,Match.Status,"记录游戏运行时的逻辑状态"
+Match.Status.Locked,Match.Status.Locked,"名单锁定：准备阶段结束，不再接受新玩家"
+Match.Status.Aborted,Match.Status.Aborted,"由于特殊原因导致比赛强行中止"
