@@ -8,10 +8,12 @@
 
 | 变量名 | 类型 | 值 | 复制 | 说明 |
 |--------|------|-----|------|------|
-| Preparing Duration | 浮点 | 5.0 | - | 准备阶段时长（秒） |
-| In Progress Duration | 浮点 | 600.0 | - | 进行阶段时长（秒，10分钟） |
-| IsRedLight | 布尔 | false | RepNotify | 当前是否红灯状态 |
-| IsDetecting | 布尔 | false | RepNotify | 当前是否检测中（木偶转身完成后为 true） |
+| Preparing Duration | 浮点 | 5.0 | ❌ | 准备阶段时长（秒） |
+| In Progress Duration | 浮点 | 600.0 | ❌ | 进行阶段时长（秒，10分钟） |
+| GreenLightInterval | 浮点 | 5.0 | ❌ | 绿灯持续时间（秒） |
+| RedLightInterval | 浮点 | 3.0 | ❌ | 红灯持续时间（秒） |
+| IsRedLight | 布尔 | false | ✅ RepNotify | 当前是否红灯状态 |
+| IsDetecting | 布尔 | false | ✅ RepNotify | 当前是否检测中（木偶转身完成后为 true） |
 
 ## 事件分发器
 
@@ -49,6 +51,4 @@
 
 | 变量名 | 类型 | 用途 |
 |--------|------|------|
-| RedLightDuration | 浮点 | 红灯持续时间（用于时长衰减） |
-| GreenLightDuration | 浮点 | 绿灯持续时间（用于时长衰减） |
 | RoundCount | 整数 | 当前轮次（用于时长衰减计算） |

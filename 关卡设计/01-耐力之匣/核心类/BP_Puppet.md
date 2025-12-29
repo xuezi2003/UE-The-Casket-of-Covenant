@@ -21,7 +21,7 @@ BP_Puppet 是场景中放置的 Actor，DS 和 Client 各自有独立实例，�
 
 | 组件 | 类型 | 说明 |
 |------|------|------|
-| SkeletalMesh | Skeletal Mesh Component | 木偶骨骼网格 |
+| SkeletalMesh | Skeletal Mesh Component | 木偶骨骼网格（Rotation Z = -90°，使模型面向 +X 轴） |
 
 ## 变量
 
@@ -35,9 +35,12 @@ BP_Puppet 是场景中放置的 Actor，DS 和 Client 各自有独立实例，�
 | 动画 | 说明 | 使用方式 |
 |------|------|----------|
 | Anim_BackIdle | 背对玩家待机（循环） | 状态机 |
-| Anim_FaceIdle | 面对玩家待机（循环） | 状态机 |
-| Anim_Turn | 转身动画（启用 Root Motion） | 状态机 |
+| Anim_FaceIdle | 面对玩家待机（循环，Rotate Root Bone Yaw=180°） | 状态机 |
+| Anim_Turn | 转身动画（BackToFace） | 状态机 |
+| Anim_Turn_inv | 转身动画倒放（FaceToBack） | 状态机 |
 | Anim_Detect | 发现玩家反应 | 蒙太奇 |
+
+**旋转方案**：不使用 Root Motion，FaceIdle 通过 `Rotate Root Bone` 节点旋转 180°，Actor 保持不动。
 
 ## Anim Notify
 
@@ -45,11 +48,16 @@ BP_Puppet 是场景中放置的 Actor，DS 和 Client 各自有独立实例，�
 |--------|------|------|
 | AN_DetectionStart | Anim_Turn 末尾 | 根据 bIsFacing 设置检测开关 |
 
-**说明**：AN_DetectionStart 在转身动画末尾触发，根据当前 bIsFacing 值决定是开始检测（true）还是停止检测（false）。同一个 Notify 复用于两个方向的转身。
+**说明**：
+- AN_DetectionStart 只放在 Anim_Turn 末尾
+- Anim_Turn_inv 是 Anim_Turn 的倒放，所以 Notify 在 inv 的开头触发
+- Turn 播放完毕时 bIsFacing=true → 开启检测
+- Turn_inv 开始播放时 bIsFacing=false → 关闭检测
+- 同一个 Notify 复用于两个方向的转身
 
 **Notify 触发流程**（仅 DS 执行，通过 Is Server 检查）：
 ```
-Anim_Turn 播放完成
+Anim_Turn 末尾 / Anim_Turn_inv 开头
     ↓
 AN_DetectionStart 触发
     ↓
@@ -65,18 +73,18 @@ Monitor 开始/停止检测
 ## 动画蓝图状态机
 
 ```
-Entry → BackIdle ←→ Turn ←→ FaceIdle
-                              ↓
-                      Detect（蒙太奇叠加）
+Entry → BackIdle ←→ BackToFace ←→ FaceIdle
+                                    ↕
+                               FaceToBack
 ```
 
 **状态转换条件**：
-- BackIdle → Turn：bIsFacing = true
-- Turn → FaceIdle：动画播放完毕 且 bIsFacing = true
-- FaceIdle → Turn：bIsFacing = false
-- Turn → BackIdle：动画播放完毕 且 bIsFacing = false
+- BackIdle → BackToFace：bIsFacing = true
+- BackToFace → FaceIdle：动画播放完毕
+- FaceIdle → FaceToBack：bIsFacing = false
+- FaceToBack → BackIdle：动画播放完毕
 
-**说明**：Anim_Turn 启用 Root Motion，正向和反向转身都播放同一个动画，角色实际转动 180°。
+**FaceIdle 特殊处理**：使用 `Rotate Root Bone` 节点，Yaw = 180°，使骨骼面向玩家。
 
 ## 事件流程
 

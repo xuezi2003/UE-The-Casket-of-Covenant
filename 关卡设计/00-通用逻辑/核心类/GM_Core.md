@@ -42,6 +42,21 @@ GM 子类通过配置以下变量实现关卡差异化：
 BeginPlay → RestoreAISurvivors
 ```
 
+### Spawn Default Pawn For（重写）
+```
+Spawn Default Pawn For (New Player, Start Spot)
+    ↓
+GetSpawnPos → SpawnActor (Default Pawn Class)
+    ↓
+传入 Expose on Spawn 参数：
+    - LevelCharacterComponentClass
+    - LevelIMC
+    ↓
+Return Spawned Pawn
+```
+
+**注意**：组件实际在 BP_Character_Game.InitPlayer 里添加，不在 GM 里添加。GM 只负责传入组件类。
+
 ### Event OnPostLogin（玩家登录）
 ```
 OnPostLogin (New Player)
@@ -61,7 +76,9 @@ For Each (GI_FiveBox.PlayerRecords)
     ↓
 条件：!IsHuman && !IsEliminated
     ↓
-SpawnActor BP_Character_Game → SpawnActor AIC_Core → Possess
+SpawnActor BP_Character_Game（传入 LevelCharacterComponentClass/LevelIMC）
+    ↓
+SpawnActor AIC_Core → Possess
     ↓
 从档案注入 PlayerNum/AvatarData 到 PS
 ```
@@ -72,7 +89,9 @@ NeedAICnt = NeedPlayerCnt - LENGTH(PlayerRecords)
     ↓
 For Loop (1 to NeedAICnt)
     ↓
-SpawnActor → Possess → 设置数据 → AddPlayerRecord
+SpawnActor BP_Character_Game（传入 LevelCharacterComponentClass/LevelIMC）
+    ↓
+Possess → 设置数据 → AddPlayerRecord
 ```
 
 ### GetSpawnPos（虚函数）

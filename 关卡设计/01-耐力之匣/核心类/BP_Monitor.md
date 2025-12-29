@@ -54,8 +54,14 @@ Monitor 启动定时检测（CheckInterval 间隔）
 - 玩家互相遮挡：射线先命中其他玩家
 
 **Line Trace 配置**：
-- Channel：Visibility 或自定义 Channel
-- 忽略发射者自身：是
+- Channel：**PuppetVision**（自定义 Trace Channel，默认 Block）
+- Ignore Self：**否**（Monitor 需要接收碰撞）
+- Actors to Ignore：当前检测的 Character（防止射线被玩家自身碰撞体挡住）
+
+**PuppetVision 通道说明**：
+- 专门用于木偶视线检测，不影响其他系统
+- 玩家可以互相遮挡（躲在其他玩家后面不会被检测）
+- 障碍物也会遮挡视线
 
 ## 事件监听
 

@@ -26,9 +26,19 @@
 
 ## 重写函数
 
-| 函数 | 说明 |
-|------|------|
-| GetSpawnPos | 返回关卡1 出生点坐标 |
+### GetSpawnPos
+```
+Get Actor Of Class (BP_BornVol)
+→ RandomPoint (调用 BP_BornVol.GetRandomPlayerStarter)
+→ Return Pos
+```
+返回 BP_BornVol 区域内的随机坐标。
+
+## 场景依赖
+
+| Actor | 用途 |
+|-------|------|
+| BP_BornVol | 出生区域，GetSpawnPos 从中获取随机点 |
 
 ## 实现状态
 

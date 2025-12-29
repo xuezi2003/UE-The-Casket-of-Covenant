@@ -8,14 +8,21 @@
 
 ```
 Root
-├── GreenLight → SetRedLight（转换）
-│   ├── SetGreenLight（设置 IsRedLight = false）
-│   └── Delay（绿灯持续时间）→ RedLight
+├── GreenLight
+│   ├── SetGreenLight（STT_SetRedLight: false + STT_SimplePrint）
+│   └── Delay（Actor.GreenLightInterval）→ RedLight
 │
-└── RedLight → SetRedLight（转换）
-    ├── SetRedLight（设置 IsRedLight = true）
-    └── Delay（红灯持续时间）→ GreenLight
+└── RedLight
+    ├── SetRedLight（STT_SetRedLight: true + STT_SimplePrint）
+    └── Delay（Actor.RedLightInterval）→ GreenLight
 ```
+
+## 参数绑定
+
+| Delay | 绑定变量 |
+|-------|----------|
+| GreenLight → RedLight | Actor.GreenLightInterval |
+| RedLight → GreenLight | Actor.RedLightInterval |
 
 ## 自定义任务
 
@@ -26,7 +33,6 @@ Root
 ## 待实现
 
 - [ ] 时长衰减逻辑（随轮次增加，绿灯时间缩短）
-- [ ] 从 GS 读取配置的时长参数
 
 ## 实现状态
 
@@ -34,3 +40,4 @@ Root
 - [x] GreenLight/RedLight 状态已添加
 - [x] STT_SetRedLight 任务已创建
 - [x] 状态转换已配置
+- [x] Delay 绑定 GS 的 Interval 变量

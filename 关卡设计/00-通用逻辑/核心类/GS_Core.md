@@ -4,9 +4,12 @@
 
 ## 组件
 
-| 组件 | 类型 | 用途 |
-|------|------|------|
-| MainST | Brain Component | 运行 ST_LevelFlow_Main |
+| 组件 | 类型 | 用途 | 默认资产 |
+|------|------|------|----------|
+| MainST | StateTreeComponent | 运行主流程状态树 | ST_LevelFlow_Main |
+| LevelSubST | StateTreeComponent | 运行关卡子状态树（由 STT_StartLevelSubST 启动） | 无（运行时设置） |
+
+**注意**：MainST 组件必须在类默认值中设置 State Tree 属性为 `ST_LevelFlow_Main`。
 
 ## 变量
 

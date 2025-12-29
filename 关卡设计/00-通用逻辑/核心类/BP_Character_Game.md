@@ -37,6 +37,14 @@
 - 玩家：Overlap → UI 提示 → 按键触发交互
 - AI：行为树 Service 读取 → 决策 → BTTask 触发交互
 
+## 变量
+
+| 变量名 | 类型 | 复制 | 用途 |
+|--------|------|------|------|
+| PS | PS_FiveBox | ❌ | 缓存的 PlayerState 引用 |
+| LevelCharacterComponentClass | Actor Component Class | ✅ | 关卡专属组件类（Spawn 时传入） |
+| LevelIMC | Input Mapping Context | ✅ | 关卡专属输入映射（Spawn 时传入） |
+
 ## 事件图表
 
 | 事件 | 处理 |
@@ -96,6 +104,8 @@ Bind Event to On Player Num Change → HandleNumChange
 Update Player Num + Update Player Avatar
     ↓
 Handle Speed Rate Change
+    ↓
+LevelCharacterComponentClass 有效？→ Add Actor Component
 ```
 
 ### HandleSpeedRateChange 逻辑
