@@ -14,6 +14,7 @@
 | GSC (GAS Companion) | GAS 模块化扩展，挂载在 PlayerState | [官方文档](https://gascompanion.github.io/) |
 | Blueprint Attributes | 蓝图属性系统，AttributeSet 蓝图化 | [官方文档](https://blueprintattributes.github.io/docs) |
 | Target System | 玩家锁定/视线检测（木偶监视等） | [GitHub Wiki](https://github.com/mklabs/ue4-targetsystemplugin/wiki) |
+| MOTS (Object Throwing System) | 物体投掷系统（关卡1、5） | [参考文档](../参考文档/MOTS_Documentation.md) |
 | Advanced Sessions | 高级会话管理（Steam 集成） | [GitHub](https://github.com/mordentral/AdvancedSessionsPlugin) / [论坛](https://forums.unrealengine.com/t/advanced-sessions-plugin/30020) |
 | State Tree | 游戏流程状态管理 | UE5 内置 |
 | Behavior Tree | AI 行为控制 | UE5 内置 |
