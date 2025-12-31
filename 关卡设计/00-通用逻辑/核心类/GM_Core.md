@@ -51,11 +51,15 @@ GetSpawnPos → SpawnActor (Default Pawn Class)
 传入 Expose on Spawn 参数：
     - LevelCharacterComponentClass
     - LevelIMC
+    - LevelAbilitySet
     ↓
 Return Spawned Pawn
 ```
 
-**注意**：组件实际在 BP_Character_Game.InitPlayer 里添加，不在 GM 里添加。GM 只负责传入组件类。
+**注意**：
+- 组件实际在 BP_Character_Game.InitPlayer 里添加，不在 GM 里添加
+- AbilitySet 也在 InitPlayer 里通过 GiveAbilitySet 赋予
+- GM 只负责传入配置参数
 
 ### Event OnPostLogin（玩家登录）
 ```
@@ -66,8 +70,6 @@ GetUniquePlayerNum → 判断 PlayerNum == -1?
     └── False（无缝切换）：从 PS 读取现有数据
     ↓
 Make S Player Record → GI_FiveBox.AddPlayerRecord
-    ↓
-Clear Ability Set → Give Ability Set
 ```
 
 ### RestoreAISurvivors（还原存活 AI）
@@ -76,7 +78,7 @@ For Each (GI_FiveBox.PlayerRecords)
     ↓
 条件：!IsHuman && !IsEliminated
     ↓
-SpawnActor BP_Character_Game（传入 LevelCharacterComponentClass/LevelIMC）
+SpawnActor BP_Character_Game（传入 LevelCharacterComponentClass/LevelIMC/LevelAbilitySet）
     ↓
 SpawnActor AIC_Core → Possess
     ↓
@@ -89,7 +91,7 @@ NeedAICnt = NeedPlayerCnt - LENGTH(PlayerRecords)
     ↓
 For Loop (1 to NeedAICnt)
     ↓
-SpawnActor BP_Character_Game（传入 LevelCharacterComponentClass/LevelIMC）
+SpawnActor BP_Character_Game（传入 LevelCharacterComponentClass/LevelIMC/LevelAbilitySet）
     ↓
 Possess → 设置数据 → AddPlayerRecord
 ```

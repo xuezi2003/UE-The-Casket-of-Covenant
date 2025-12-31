@@ -49,6 +49,12 @@ Is Valid (ASC)
     └── False → IsMoving? → Remove GE_Moving → SET IsMoving = false
 ```
 
+**GE_Moving 效果**：
+- 添加 `Player.State.Moving` 标签（表示移动中）
+- 添加 `Player.State.Danger` 标签（红灯时被检测到会死亡）
+
+**职责说明**：GE_Moving 统一处理所有"移动"相关的 Danger 标签，其他 GE（如 GE_Sprint）只负责添加各自的 Action 标签（如 Running），不重复添加 Danger。
+
 ## 待实现
 
 | 功能 | 说明 |

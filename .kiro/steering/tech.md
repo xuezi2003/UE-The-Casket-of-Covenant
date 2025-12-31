@@ -58,6 +58,14 @@
 - **事件驱动**: OnRep 复制 + 事件分发器广播状态变化
 - **虚函数扩展**: 父类定义流程，子类重写具体实现（如 GetSpawnPos）
 
+### GAS 开发规范
+
+1. **GE 优先原则**：修改属性必须使用 Gameplay Effect，不能直接设置，便于 Buff 叠加和网络同步
+2. **Danger 标签统一处理**：GE_Moving 统一处理所有移动相关的 Danger 标签，其他 GE 只负责各自的 Action 标签
+3. **IMC 架构**：每关卡一个完整 IMC（包含通用输入 + 关卡专属输入），不使用多 IMC 组合
+4. **AbilitySet 赋予时机**：在 Character.InitPlayer 里通过 GiveAbilitySet 赋予，确保客户端输入绑定生效
+5. **属性监听方式**：使用 Async Task `Wait for Attribute Changed`，不使用 GSCCore 委托（存在网络同步问题）
+
 ## 文档语言
 
 - 所有设计文档使用中文编写

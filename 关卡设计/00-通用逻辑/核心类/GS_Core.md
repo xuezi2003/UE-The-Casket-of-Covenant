@@ -9,7 +9,17 @@
 | MainST | StateTreeComponent | 运行主流程状态树 | ST_LevelFlow_Main |
 | LevelSubST | StateTreeComponent | 运行关卡子状态树（由 STT_StartLevelSubST 启动） | 无（运行时设置） |
 
-**注意**：MainST 组件必须在类默认值中设置 State Tree 属性为 `ST_LevelFlow_Main`。
+**组件设置**：
+
+| 组件 | 组件复制 | 自动启动逻辑 | 说明 |
+|------|----------|--------------|------|
+| MainST | ❌ | ❌ | 仅服务端运行，BeginPlay 里手动启动 |
+| LevelSubST | ❌ | ❌ | 仅服务端运行，由 STT_StartSubStateTree 手动启动 |
+
+**注意**：
+- MainST 组件必须在类默认值中设置 State Tree 属性为 `ST_LevelFlow_Main`
+- 状态树只在服务端运行，客户端通过复制变量（ActiveMatchPhase、IsRedLight 等）获取状态
+- MainST 在 BeginPlay 里通过 `Has Authority → Start Logic` 手动启动
 
 ## 变量
 

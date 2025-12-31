@@ -80,17 +80,17 @@ Root
 - **Tasks**:
   - STT_SetMatchPhase: NewPhase = `Match.Phase.Main.InProgress`
   - STT_SimplePrint: Content = "[ST_Core] 进入正式游戏"
+- **Transitions**: 完成后 → 下个状态（StartSubStateTree）
+
+### StartSubStateTree 状态
+- **Tasks**:
+  - STT_StartSubStateTree: 从 GM 获取 LevelSubStateTree，启动到 GS.SubST
 - **Transitions**: 完成后 → 下个状态（WaitingSettle）
 
 ### WaitingSettle 状态
 - **Tasks**:
   - Delay Task: 时长绑定到 `Actor.InProgressDuration`，随机偏差 = 0.0，永远奔跑 = false
 - **Transitions**: 完成后 → Settlement
-
-### StartSubStateTree 状态
-- **Tasks**:
-  - STT_StartSubStateTree: 从 GM 获取 LevelSubStateTree，启动到 GS.SubST
-- **Transitions**: 完成后 → 下个状态（WaitingSettle）
 
 ## Settlement 阶段详细配置
 

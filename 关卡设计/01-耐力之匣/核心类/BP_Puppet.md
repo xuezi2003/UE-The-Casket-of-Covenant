@@ -35,12 +35,15 @@ BP_Puppet 是场景中放置的 Actor，DS 和 Client 各自有独立实例，�
 | 动画 | 说明 | 使用方式 |
 |------|------|----------|
 | Anim_BackIdle | 背对玩家待机（循环） | 状态机 |
-| Anim_FaceIdle | 面对玩家待机（循环，Rotate Root Bone Yaw=180°） | 状态机 |
-| Anim_Turn | 转身动画（BackToFace） | 状态机 |
-| Anim_Turn_inv | 转身动画倒放（FaceToBack） | 状态机 |
-| Anim_Detect | 发现玩家反应 | 蒙太奇 |
+| Anim_Face_Idle | 面对玩家待机（循环，已旋转 180°） | 状态机 |
+| Anim_Trun | 转身动画（BackToFace） | 状态机 |
+| Anim_Trun_inv | 转身动画倒放（FaceToBack） | 状态机 |
+| Anim_Detect_Face_Montage | 发现玩家反应（已旋转 180°） | 蒙太奇 |
 
-**旋转方案**：不使用 Root Motion，FaceIdle 通过 `Rotate Root Bone` 节点旋转 180°，Actor 保持不动。
+**旋转版动画制作方法**：
+- 右键动画资产 → 资产操作 → 导出 FBX 到项目文件夹
+- 项目自动导入该 FBX，在导入设置里设置旋转 180°
+- FaceIdle 和 Detect 都用此方法处理，动画蓝图无需 Rotate Root Bone 节点
 
 ## Anim Notify
 
@@ -78,13 +81,17 @@ Entry → BackIdle ←→ BackToFace ←→ FaceIdle
                                FaceToBack
 ```
 
+**Slot 节点设置**：
+- 插槽名称：DefaultGroup.DefaultSlot
+- **固定更新源姿势**：✅（确保蒙太奇播放期间状态机继续更新，蒙太奇结束后正确回到当前状态）
+
 **状态转换条件**：
 - BackIdle → BackToFace：bIsFacing = true
-- BackToFace → FaceIdle：动画播放完毕
+- BackToFace → FaceIdle：Time Remaining (ratio) <= 0.1
 - FaceIdle → FaceToBack：bIsFacing = false
-- FaceToBack → BackIdle：动画播放完毕
+- FaceToBack → BackIdle：Time Remaining (ratio) <= 0.1
 
-**FaceIdle 特殊处理**：使用 `Rotate Root Bone` 节点，Yaw = 180°，使骨骼面向玩家。
+**FaceIdle 状态**：直接播放已旋转 180° 的 Anim_Face_Idle 动画。
 
 ## 事件流程
 
@@ -105,10 +112,19 @@ BP_Monitor 检测到危险玩家
     ↓
 GS_Endurance 广播 OnPlayerDetected 事件
     ↓
-BP_Puppet 监听事件
+BP_Puppet 监听事件（HandlePlayerDetected）
     ↓
-播放 Anim_Detect 蒙太奇
+播放 Anim_Detect_Face_Montage 蒙太奇
+    ↓
+蒙太奇结束回调（On Completed）
+    ↓
+检查 bIsFacing，如果 false → 调用 GS.Server_SetDetecting(false)
 ```
+
+**蒙太奇结束回调说明**：
+- 蒙太奇播放期间状态机会继续更新状态，但动画序列不会实际播放
+- 如果蒙太奇播放期间 bIsFacing 变为 false，Turn_inv 开头的 Notify 会被跳过
+- 因此需要在蒙太奇结束时手动检查并设置 IsDetecting
 
 ## 实现状态
 
@@ -119,4 +135,4 @@ BP_Puppet 监听事件
 - [x] 监听 GS_Endurance 事件（OnIsRedLightChange、OnPlayerDetected）
 - [x] SkeletalMesh 设置 Always Tick Pose
 - [x] Anim Notify（AN_DetectionStart）
-- [x] HandlePlayerDetected 播放 Anim_Detect 蒙太奇
+- [x] HandlePlayerDetected 播放 Anim_Detect_Face_Montage 蒙太奇

@@ -33,8 +33,8 @@ Event On Possess → Run Behavior Tree (BT_Asset)
 
 | 行为树 | 关卡 | AI 行为 |
 |--------|------|---------|
-| BT_Endurance | 1 | 跑向终点、红灯停、绿灯跑、随机推人 |
+| BT_Endurance | 1 | 向终点移动、红灯停绿灯跑、奔跑/蹲行/跳跃、推搡、闪避、失衡QTE判定、道具使用 |
 | BT_Logic | 2 | 随机选房间、跟随多数人 |
 | BT_Courage | 3 | 按概率戴面具 |
 | BT_Insight | 4 | 随机站队 |
-| BT_Sacrifice | 5 | 移动、推人、扔硬币测试 |
+| BT_Sacrifice | 5 | 向终点移动、推搡、闪避、失衡QTE判定、扔金币测试玻璃 |
