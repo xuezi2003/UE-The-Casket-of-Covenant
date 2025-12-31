@@ -19,7 +19,8 @@
 │       ├── GM_Core.md
 │       ├── PS_FiveBox.md
 │       ├── AIC_Core.md
-│       └── BP_Character_Game.md
+│       ├── BP_Character_Game.md
+│       └── ST_LevelFlow_Main.md  # 主状态树流程
 ├── 01-耐力之匣/          # 关卡1：红绿灯机制
 │   ├── 总体策划.md
 │   ├── 输入映射.md       # 关卡专属输入配置
@@ -31,6 +32,8 @@
 ├── 04-洞察之匣/          # 关卡4：异常走廊
 └── 05-牺牲之匣/          # 关卡5：玻璃桥
 待办文档/                  # 每日待办记录（YYYY-MM-DD.md）
+参考文档/                  # 插件文档与外部资料
+    └── MOTS_Documentation.md
 ```
 
 ## 文档规范

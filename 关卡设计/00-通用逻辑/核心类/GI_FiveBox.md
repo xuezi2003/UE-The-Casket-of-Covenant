@@ -19,4 +19,4 @@
 
 ## 设计说明
 
-PlayerRecords 存储在 GameInstance 而非 GameState，因为 GameState 在无缝切换时会被销毁重建。
+> 数据结构详见 [系统架构.md](../系统架构.md#三数据结构)。

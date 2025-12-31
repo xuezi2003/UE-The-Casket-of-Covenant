@@ -57,6 +57,23 @@
 - **档案驱动实体 (Record-Driven Architecture)**: GameInstance 存储数据，PlayerState/Character 表现状态
 - **事件驱动**: OnRep 复制 + 事件分发器广播状态变化
 - **虚函数扩展**: 父类定义流程，子类重写具体实现（如 GetSpawnPos）
+- **表现/逻辑分离**: 如木偶 BP_Puppet（表现）与 BP_Monitor（逻辑）分离
+
+### 测试环境架构
+
+测试环境通过独立的 GM_Dev/GS_Dev 子类实现，跳过状态树流程便于调试：
+- GM_Dev_Xxx 继承 GM_Xxx，BeginPlay 不调用 Super（跳过状态树启动）
+- GS_Dev_Xxx 继承 GS_Xxx，保留所有变量和事件分发器
+- 使用触发体积手动控制游戏状态
+- 测试关卡命名：L_Dev_Xxx
+
+### 状态树流程
+
+```
+Preparing（WaitingStart → SetLock → FillAI）
+    → InProgress（StartSubST → WaitingSettle）
+    → Settlement
+```
 
 ### GAS 开发规范
 

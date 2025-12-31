@@ -47,4 +47,4 @@
 
 ## 设计说明
 
-PlayerRecords 已迁移至 GI_FiveBox，因为 GameState 在无缝切换时会被销毁。
+> PlayerRecords 存储架构详见 [系统架构.md](../系统架构.md#三数据结构)。
