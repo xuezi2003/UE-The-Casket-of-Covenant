@@ -29,3 +29,7 @@ Player.State.Invincible,Player.State.Invincible,"免伤：闪避时、护盾生�
 Effect,Effect,"GAS 效果相关标签的根标签"
 Effect.Container,Effect.Container,"Effect Container 标签（用于 GSC Apply Effect Container）"
 Effect.Container.Sprint,Effect.Container.Sprint,"奔跑效果容器"
+Effect.Container.Crouch,Effect.Container.Crouch,"蹲行效果容器"
+Ability,Ability,"能力相关标签的根标签"
+Ability.Require,Ability.Require,"能力需求标签"
+Ability.Require.Stamina,Ability.Require.Stamina,"需要体力的能力，力竭时会被取消"

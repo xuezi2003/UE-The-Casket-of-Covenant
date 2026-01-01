@@ -18,6 +18,13 @@
 | CharMoveComp | Character Movement | 移动控制 | ✅ |
 | DetectionBox | Box Collision | 前方检测框（交互检测） | ❌ 待实现 |
 
+### CharacterMesh0 关键设置
+
+> [!IMPORTANT]
+> **Dedicated Server 动画优化**：必须在 CharacterMesh0 的 Optimization 设置中，将 **Visibility Based Anim Tick Option** 设为 `Always Tick Pose and Refresh Bones`。
+>
+> 否则 Server 上的动画不会更新，导致骨骼位置与 Client 不同步（如蹲行时 head 骨骼高度不变）。
+
 ## 前方检测框（DetectionBox）设计（待实现）
 
 **用途**：检测角色前方可交互对象（其他玩家、道具）
@@ -70,14 +77,14 @@
 ### InitWaitAttributeChanged 流程
 
 ```
-Sequence
+Get Ability System Component → Get All Attributes
     ↓
-Then 0 → Wait for Attribute Changed (SpeedRate, Only Trigger Once = false)
-         → HandleAttributeChanged
+For Each Loop → Wait for Attribute Changed (Only Trigger Once = false)
     ↓
-Then 1 → Wait for Attribute Changed (BaseSpeed, Only Trigger Once = false)
-         → HandleAttributeChanged
+Changed → HandleAttributeChanged
 ```
+
+**说明**：自动获取所有属性并监听变化，不需要手动维护属性列表。
 
 ### HandleAttributeChanged 流程
 
@@ -156,16 +163,11 @@ LevelAbilitySet 有效？→ GSCAbilitySystemComponent.GiveAbilitySet(LevelAbili
 最大行走速度 = BaseSpeed × SpeedRate
 ```
 
-## 待实现
+## 已实现功能
 
 | 功能 | 输入 | 说明 |
 |------|------|------|
-| Crouch | IA_Endurance_Crouch | 低姿态移动（关卡1/5） |
-
-## 已实现
-
-| 功能 | 输入 | 说明 |
-|------|------|------|
+| Crouch | IA_Core_Crouch | 蹲行（Toggle 模式，GA_Crouch + GE_Crouch） |
 | Sprint | IA_Core_Sprint | GA_Sprint 修改 SpeedRate（通过 GE_Sprint） |
 
 ## 相关文档
