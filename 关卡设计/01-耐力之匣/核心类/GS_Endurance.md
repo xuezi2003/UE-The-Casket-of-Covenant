@@ -29,7 +29,7 @@
 |------|------|------|
 | OnRep_IsRedLight | - | RepNotify 回调，调用 OnIsRedLightChange 广播 |
 | OnRep_IsDetecting | - | RepNotify 回调，调用 OnDetectionChange 广播 |
-| Server_SetDetecting | Server | 设置 IsDetecting（由 Puppet 的 Anim Notify 调用） |
+| Server_SetDetecting | Server | 设置 IsDetecting（由 BP_Puppet 的 HandleIsRedLightChange 调用） |
 | Multicast_PlayerDetected | Multicast | 广播 OnPlayerDetected（由 Monitor 调用，所有端执行） |
 
 ## 实现状态

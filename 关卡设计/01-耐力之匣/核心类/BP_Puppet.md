@@ -15,7 +15,7 @@ BP_Puppet 是场景中放置的 Actor，DS 和 Client 各自有独立实例，�
 
 **DS 动画 Tick**：
 - SkeletalMesh 设置 `Visibility Based Anim Tick Option = Always Tick Pose and Refresh Bones`
-- 确保 DS 上动画正常 Tick，Anim Notify 可以触发
+- 确保 DS 上动画状态机正常运行
 
 ## 组件
 
@@ -29,6 +29,34 @@ BP_Puppet 是场景中放置的 Actor，DS 和 Client 各自有独立实例，�
 |--------|------|------|
 | bIsFacing | 布尔 | 是否面对玩家（驱动动画蓝图） |
 | GS_Ref | GS_Endurance | GS 引用缓存 |
+
+## 检测开关逻辑
+
+检测开关在 **`HandleIsRedLightChange`** 中手动延时触发（仅 DS 执行）。
+
+**逻辑流程**：
+```
+HandleIsRedLightChange (IsRedLight)
+    ↓
+SET bIsFacing = IsRedLight
+    ↓
+Switch Has Authority
+    ├─ Authority
+    │   ├─ Is Facing? (True/红灯)
+    │   │   ↓
+    │   │   Delay (TurnAnimDuration) → 等待转身动画播放完毕
+    │   │   ↓
+    │   │   GS.Server_SetDetecting(true)
+    │   │
+    │   └─ Not Is Facing (False/绿灯)
+    │       ↓
+    │       GS.Server_SetDetecting(false) → 立即关闭检测
+    │
+    └─ Remote → 不执行
+```
+
+**关键变量**：
+- `TurnAnimDuration` (Float): 转身动画时长（秒），可从动画序列获取 Sequence Length。
 
 ## 动画资源
 
@@ -45,34 +73,6 @@ BP_Puppet 是场景中放置的 Actor，DS 和 Client 各自有独立实例，�
 - 项目自动导入该 FBX，在导入设置里设置旋转 180°
 - FaceIdle 和 Detect 都用此方法处理，动画蓝图无需 Rotate Root Bone 节点
 
-## Anim Notify
-
-| Notify | 位置 | 说明 |
-|--------|------|------|
-| AN_DetectionStart | Anim_Turn 末尾 | 根据 bIsFacing 设置检测开关 |
-
-**说明**：
-- AN_DetectionStart 只放在 Anim_Turn 末尾
-- Anim_Turn_inv 是 Anim_Turn 的倒放，所以 Notify 在 inv 的开头触发
-- Turn 播放完毕时 bIsFacing=true → 开启检测
-- Turn_inv 开始播放时 bIsFacing=false → 关闭检测
-- 同一个 Notify 复用于两个方向的转身
-
-**Notify 触发流程**（仅 DS 执行，通过 Is Server 检查）：
-```
-Anim_Turn 末尾 / Anim_Turn_inv 开头
-    ↓
-AN_DetectionStart 触发
-    ↓
-Is Server? → 获取 BP_Puppet.bIsFacing
-    ↓
-调用 GS.Server_SetDetecting(bIsFacing)
-    ↓
-GS.IsDetecting 更新（RepNotify）
-    ↓
-Monitor 开始/停止检测
-```
-
 ## 动画蓝图状态机
 
 ```
@@ -83,28 +83,12 @@ Entry → BackIdle ←→ BackToFace ←→ FaceIdle
 
 **Slot 节点设置**：
 - 插槽名称：DefaultGroup.DefaultSlot
-- **固定更新源姿势**：✅（确保蒙太奇播放期间状态机继续更新，蒙太奇结束后正确回到当前状态）
+- **固定更新源姿势**：✅（确保蒙太奇播放期间状态机继续更新）
 
-**状态转换条件**：
-- BackIdle → BackToFace：bIsFacing = true
-- BackToFace → FaceIdle：Time Remaining (ratio) <= 0.1
-- FaceIdle → FaceToBack：bIsFacing = false
-- FaceToBack → BackIdle：Time Remaining (ratio) <= 0.1
-
-**FaceIdle 状态**：直接播放已旋转 180° 的 Anim_Face_Idle 动画。
+**检测逻辑兼容性**：
+- 播放蒙太奇时如果发生红绿灯切换，`HandleIsRedLightChange` 中的 Delay 逻辑不受影响，仍能正确切换 Monitor 状态。
 
 ## 事件流程
-
-**红绿灯切换**：
-```
-GS_Endurance.OnRep_IsRedLight
-    ↓
-BP_Puppet 监听事件
-    ↓
-设置 bIsFacing = IsRedLight
-    ↓
-动画蓝图状态机切换
-```
 
 **发现玩家**：
 ```
@@ -114,17 +98,12 @@ GS_Endurance 广播 OnPlayerDetected 事件
     ↓
 BP_Puppet 监听事件（HandlePlayerDetected）
     ↓
-播放 Anim_Detect_Face_Montage 蒙太奇
+Branch: Is Any Montage Playing? (防止重复触发)
+    ├─ True → 不执行
+    └─ False → 播放 Anim_Detect_Face_Montage 蒙太奇
     ↓
-蒙太奇结束回调（On Completed）
-    ↓
-检查 bIsFacing，如果 false → 调用 GS.Server_SetDetecting(false)
+(注意：蒙太奇回调中不再包含任何检测开关逻辑)
 ```
-
-**蒙太奇结束回调说明**：
-- 蒙太奇播放期间状态机会继续更新状态，但动画序列不会实际播放
-- 如果蒙太奇播放期间 bIsFacing 变为 false，Turn_inv 开头的 Notify 会被跳过
-- 因此需要在蒙太奇结束时手动检查并设置 IsDetecting
 
 ## 实现状态
 
@@ -134,5 +113,6 @@ BP_Puppet 监听事件（HandlePlayerDetected）
 - [x] 动画蓝图状态机（BackIdle/Turn/FaceIdle）
 - [x] 监听 GS_Endurance 事件（OnIsRedLightChange、OnPlayerDetected）
 - [x] SkeletalMesh 设置 Always Tick Pose
-- [x] Anim Notify（AN_DetectionStart）
+- [x] HandleIsRedLightChange 实现检测开关逻辑（Delay + Server_SetDetecting）
 - [x] HandlePlayerDetected 播放 Anim_Detect_Face_Montage 蒙太奇
+
