@@ -77,7 +77,7 @@ IsRunning?
 ```
 Switch on Gameplay Attribute (Attribute)
     ↓
-BAS_Core_C.Stamina → HandleStaminaChanged
+BAS_Core.Stamina → HandleStaminaChanged
 ```
 
 ### HandleStaminaChanged（自定义事件）

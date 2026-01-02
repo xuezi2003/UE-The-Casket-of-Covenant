@@ -68,32 +68,71 @@
 | WaitForPlayerState | → Cast To PS_FiveBox → 成功后 InitPlayer → InitWaitAttributeChanged → 清除定时器 |
 | HandleAvatarChange | → Update Player Avatar |
 | HandleNumChange | → Update Player Num |
-| HandleAttributeChanged | → Switch on Gameplay Attribute → HandleSpeedRateChange 等 |
+| OnAttributeChange | → Switch on Gameplay Attribute → HandleSpeedRateChanged |
 
-## 属性变化监听
+## 属性变化处理（双重保险方案）
 
-**注意**：不使用 GSCCore 的 `On Attribute Change` 委托（存在网络同步问题），改用 Async Task `Wait for Attribute Changed`。
+为了彻底解决 Autonomous Proxy 上的属性同步延迟和丢失问题，采用 **双重保险** 策略：
 
-### InitWaitAttributeChanged 流程
+1. **BAS_Core (AttributeSet)**: 监听 `PostAttributeChange` 事件
+2. **BP_Character_Game**: 监听 `OnAttributeChange` 委托
+
+### 1. BAS_Core - PostAttributeChange
+
+在 `BAS_Core`（AttributeSet 的蓝图类）中重写 `PostAttributeChange` 事件：
 
 ```
-Get Ability System Component → Get All Attributes
+Event PostAttributeChange
     ↓
-For Each Loop → Wait for Attribute Changed (Only Trigger Once = false)
-    ↓
-Changed → HandleAttributeChanged
-```
-
-**说明**：自动获取所有属性并监听变化，不需要手动维护属性列表。
-
-### HandleAttributeChanged 流程
-
-```
 Switch on Gameplay Attribute
     ↓
-SpeedRate → HandleSpeedRateChange
-BaseSpeed → HandleSpeedRateChange（BaseSpeed 变化也需要重算速度）
+SpeedRate → 调用 Character.HandleSpeedRateChanged
 ```
+
+**作用**：作为第一道防线，蓝图 AttributeSet 层面的属性变化会触发此事件，确保 Server 和 Simulated Proxy 的及时更新。
+
+### 2. BP_Character_Game - OnAttributeChange
+
+在 `BP_Character_Game` 中监听 GSCCore 的 `OnAttributeChange`：
+
+```
+On Attribute Change (GSCCore)
+    ↓
+Switch on Gameplay Attribute
+    ↓
+SpeedRate → 调用 HandleSpeedRateChanged
+```
+
+**作用**：作为补充，处理一些本地预测的瞬时变化。
+
+### 3. HandleSpeedRateChanged
+
+统一的速度更新函数：
+
+```
+最大行走速度 = BaseSpeed × SpeedRate
+```
+
+**注意**：`InitPlayer` 中仍需手动调用一次 `InitSpeed`（内容同 HandleSpeedRateChanged）以设置初始速度。
+
+## GASGraph（标签变化监听）
+
+**用途**：监听 Gameplay Tag 变化，触发本地表现逻辑（如胶囊体高度变化）。
+
+### On Gameplay Tag Change 流程
+
+```
+On Gameplay Tag Change (GSCCore)
+    ↓
+Switch on Gameplay Tag
+    ↓
+Player.Action.Crouching → HandleCrouch (NeedHalf = New Tag Count > 0)
+```
+
+**说明**：
+- GE 复制会自动同步标签到所有客户端
+- 每个客户端本地监听标签变化，执行对应的表现逻辑
+- 这样避免了 Timeline Replicated 导致的同步问题
 
 ## LocoGraph（输入处理）
 
@@ -130,7 +169,8 @@ Y Axis → Add Controller Pitch Input (Up/Down)
 | UpdatePlayerNum | 更新编号显示 |
 | UpdatePlayerAvatar | 更新外观 |
 | InitPlayer | 初始化：绑定事件 + 同步外观/编号 |
-| HandleSpeedRateChange | 速度倍率变化 → 更新最大行走速度 |
+| InitSpeed | 初始化时设置速度（后续由 BAS_Core 更新） |
+| HandleCrouch | 蹲行胶囊体高度变化（Timeline 平滑过渡） |
 
 ### InitPlayer 流程
 
@@ -143,7 +183,7 @@ Bind Event to On Player Num Change → HandleNumChange
     ↓
 Update Player Num + Update Player Avatar
     ↓
-Handle Speed Rate Change
+Init Speed
     ↓
 LevelCharacterComponentClass 有效？→ Add Actor Component
     ↓
@@ -157,11 +197,15 @@ LevelAbilitySet 有效？→ GSCAbilitySystemComponent.GiveAbilitySet(LevelAbili
 - LevelAbilitySet 通过 GiveAbilitySet 赋予，同时建立输入绑定
 - InitPlayer 在服务器和客户端都执行，确保输入绑定在客户端生效
 
-### HandleSpeedRateChange 逻辑
+### HandleSpeedRateChanged / InitSpeed 逻辑
 
 ```
 最大行走速度 = BaseSpeed × SpeedRate
 ```
+
+**说明**：
+- `InitSpeed`：仅在初始化时调用
+- `HandleSpeedRateChanged`：在运行时由属性变化触发（BAS_Core 或 Character 监听）
 
 ## 已实现功能
 

@@ -14,7 +14,7 @@
 | 组件 | 组件复制 | 自动启动逻辑 | 说明 |
 |------|----------|--------------|------|
 | MainST | ❌ | ❌ | 仅服务端运行，BeginPlay 里手动启动 |
-| LevelSubST | ❌ | ❌ | 仅服务端运行，由 STT_StartSubStateTree 手动启动 |
+| LevelSubST | ❌ | ❌ | 仅服务端运行，由 STT_StartLevelSubST 手动启动 |
 
 **注意**：
 - MainST 组件必须在类默认值中设置 State Tree 属性为 `ST_LevelFlow_Main`

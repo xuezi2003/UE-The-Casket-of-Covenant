@@ -29,8 +29,8 @@ Root
 │   │   ├── STT_SetMatchPhase（NewPhase = Match.Phase.Main.InProgress）
 │   │   └── STT_SimplePrint（"[ST_Core] 进入正式游戏"）
 │   │   → 下个状态
-│   ├── StartSubStateTree
-│   │   └── STT_StartSubStateTree（启动 GM.LevelSubStateTree 到 GS.SubST）
+│   ├── StartLevelSubST
+│   │   └── STT_StartLevelSubST（启动 GM.LevelSubStateTree 到 GS.LevelSubST）
 │   │   → 下个状态
 │   └── WaitingSettle
 │       └── Delay Task（Duration = Actor.InProgressDuration）
@@ -80,11 +80,11 @@ Root
 - **Tasks**:
   - STT_SetMatchPhase: NewPhase = `Match.Phase.Main.InProgress`
   - STT_SimplePrint: Content = "[ST_Core] 进入正式游戏"
-- **Transitions**: 完成后 → 下个状态（StartSubStateTree）
+- **Transitions**: 完成后 → 下个状态（StartLevelSubST）
 
-### StartSubStateTree 状态
+### StartLevelSubST 状态
 - **Tasks**:
-  - STT_StartSubStateTree: 从 GM 获取 LevelSubStateTree，启动到 GS.SubST
+  - STT_StartLevelSubST: 从 GM 获取 LevelSubStateTree，启动到 GS.LevelSubST
 - **Transitions**: 完成后 → 下个状态（WaitingSettle）
 
 ### WaitingSettle 状态
@@ -108,7 +108,7 @@ Root
 | STT_SimplePrint | 调试打印（仅开发） | Content: String |
 | STT_AddMatchStatus | 添加比赛状态标签到 GS.ActiveMatchStatus | NewStatus: GameplayTag |
 | STT_FillAI | 填充 AI 玩家到目标人数 | - |
-| STT_StartSubStateTree | 启动关卡子状态树 | - |
+| STT_StartLevelSubST | 启动关卡子状态树 | - |
 
 ### STT_SetMatchPhase
 ```
@@ -149,7 +149,7 @@ Event EnterState
 - **输入**: 无
 - **作用**: 调用 GM_Core.FillAIPlayers 填充 AI 到目标人数
 
-### STT_StartSubStateTree
+### STT_StartLevelSubST
 ```
 Event EnterState
 → Get Game Mode → Cast to GM_Core → Get LevelSubStateTree
