@@ -18,6 +18,13 @@
 | CharMoveComp | Character Movement | 移动控制 | ✅ |
 | DetectionBox | Box Collision | 前方检测框（交互检测） | ❌ 待实现 |
 
+### CharMoveComp 关键设置
+
+> [!WARNING]
+> **网络平滑模式必须禁用**：为了确保蹲行时 Mesh 位置在 Simulated Proxy 上正确显示，必须将 **网络平滑模式** 设为 **禁用**。
+>
+> 原因：Simulated Proxy 上的网络平滑会每帧将 Mesh 位置"校正"回默认值，覆盖 HandleCrouch 中 Timeline 设置的位置。
+
 ### CharacterMesh0 关键设置
 
 > [!IMPORTANT]

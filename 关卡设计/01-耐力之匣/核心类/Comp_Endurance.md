@@ -58,6 +58,7 @@ Wait for Attribute Changed (Only Trigger Once = false) → HandleAttributeChange
 Switch on Gameplay Tag (GameplayTag)
     ↓
 Player.Action.Running → HandleRunning (IsRunning = NewTagCount > 0)
+Player.Action.Crouching → HandleCrouching
 ```
 
 ### HandleRunning（函数）
@@ -68,6 +69,18 @@ Player.Action.Running → HandleRunning (IsRunning = NewTagCount > 0)
 IsRunning?
     ├─ True → ApplyGameplayEffectToSelf (GE_StaminaDrain_Sprint)
     └─ False → RemoveActiveGameplayEffectBySourceEffect (GE_StaminaDrain_Sprint, Stacks = -1)
+```
+
+### HandleCrouching（函数）
+
+**说明**：蹲下/起身过程中添加危险标签（0.2 秒内算移动）
+
+```
+ApplyGameplayEffectToSelf (GE_Moving)
+    ↓
+Delay (0.2s)
+    ↓
+RemoveActiveGameplayEffectBySourceEffect (GE_Moving, Stacks = -1)
 ```
 
 ### HandleAttributeChanged（自定义事件）
