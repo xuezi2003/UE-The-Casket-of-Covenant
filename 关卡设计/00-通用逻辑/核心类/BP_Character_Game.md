@@ -147,7 +147,7 @@ Player.Action.Crouching → HandleCrouch (NeedHalf = New Tag Count > 0)
 |------|------|
 | IA_Core_Look | → Aim 函数 |
 | IA_Core_Move | → Move 函数 |
-| IA_Core_Jump | Started → Jump，Completed → Stop Jumping |
+| IA_Core_Jump | Started → GA_Jump（通过 AbilitySet 输入绑定触发） |
 
 ## 函数
 
@@ -220,6 +220,7 @@ LevelAbilitySet 有效？→ GSCAbilitySystemComponent.GiveAbilitySet(LevelAbili
 |------|------|------|
 | Crouch | IA_Core_Crouch | 蹲行（Toggle 模式，GA_Crouch + GE_Crouch） |
 | Sprint | IA_Core_Sprint | GA_Sprint 修改 SpeedRate（通过 GE_Sprint） |
+| Jump | IA_Core_Jump | GA_Jump（消耗体力 -15，防止二段跳） |
 
 ## 相关文档
 

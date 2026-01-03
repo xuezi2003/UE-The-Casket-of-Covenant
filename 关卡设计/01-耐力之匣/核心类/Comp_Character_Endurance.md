@@ -1,8 +1,11 @@
-# Comp_Endurance（ActorComponent）
+# Comp_Character_Endurance（ActorComponent）
 
-**职责**：关卡1 玩家操作组件，移动状态检测 + 体力消耗管理
+**职责**：关卡1 角色组件，移动状态检测 + 体力消耗管理（服务端逻辑）
 
-**挂载于**：BP_Character_Game（在 InitPlayer 里根据 LevelCharacterComponentClass 动态添加，服务端和客户端都会执行）
+**挂载于**：BP_Character_Game（在 InitPlayer 里根据 LevelCharacterComponentClass 动态添加）
+
+> [!NOTE]
+> **命名规范**：`Comp_Character_xxx` 挂载在 Character 上处理服务端逻辑，`Comp_PC_xxx` 挂载在 PlayerController 上处理客户端逻辑（如 QTE UI）。
 
 ## 变量
 
@@ -11,6 +14,9 @@
 | BP_Character | BP_Character_Game | 缓存的角色引用 |
 | ASC | AbilitySystemComponent | 缓存的 ASC 引用 |
 | GSCCore | GSCCoreComponent | 缓存的 GSCCore 引用（用于绑定事件） |
+| IsMoving | Boolean | 当前是否移动中 |
+| MovingThreshold | Float | 移动速度阈值 |
+| ExhaustedThreshold | Float | 力竭退出阈值（默认 15） |
 
 ## 关键逻辑
 
@@ -32,23 +38,23 @@ Get Ability System Component from Actor (BP_Character)
 Is Valid?
     ├─ Yes → SET ASC → Clear Timer (WaitForASC)
     │        → Bind Event to On Gameplay Tag Change (GSCCore) → HandleTagChanged
-    │        → InitWaitAttributeChanged
+    │        → Bind Event to On Attribute Change (GSCCore) → HandleAttributeChanged
     └─ No → 继续等待
 ```
 
-**注意**：ASC 挂在 PlayerState 上（GSC 架构），必须通过 GSCCore 组件获取。
+**注意**：ASC 挂在 PlayerState 上（GSC 架构），必须通过 GSCCore 组件获取。使用 GSCCore 官方提供的事件绑定，不再使用自定义 Async Task。
 
-### InitWaitAttributeChanged（自定义事件）
+### HandleAttributeChanged（自定义事件）
+
+参数：Attribute, NewValue, OldValue
 
 ```
-Get Owner → Get Ability System Component → Get All Attributes
+Switch on Gameplay Attribute (Attribute)
     ↓
-For Each Loop
-    ↓
-Wait for Attribute Changed (Only Trigger Once = false) → HandleAttributeChanged
+BAS_Core.Stamina → HandleStaminaChanged
 ```
 
-**说明**：自动获取所有属性并监听变化，与 BP_Character_Game 使用相同的 Async Task 模式。
+**说明**：使用 GSCCore 官方的 `On Attribute Change` 事件绑定，替代自定义 Async Task。
 
 ### HandleTagChanged（自定义事件）
 
@@ -83,23 +89,20 @@ Delay (0.2s)
 RemoveActiveGameplayEffectBySourceEffect (GE_Moving, Stacks = -1)
 ```
 
-### HandleAttributeChanged（自定义事件）
+### HandleStaminaChanged（函数）
 
-参数：Attribute
-
-```
-Switch on Gameplay Attribute (Attribute)
-    ↓
-BAS_Core.Stamina → HandleStaminaChanged
-```
-
-### HandleStaminaChanged（自定义事件）
+**说明**：采用滞后阈值逻辑，避免力竭边界抖动。
 
 ```
-Get Float Attribute (Stamina) → Stamina <= 20?
-    ├─ True → ApplyGameplayEffectToSelf (GE_Exhausted)
-    └─ False → RemoveActiveGameplayEffectBySourceEffect (GE_Exhausted, Stacks = -1)
+Has Matching Gameplay Tag (Player.State.Exhausted)?
+    ├─ 否（未力竭） → Stamina <= 0? → ApplyGameplayEffectToSelf (GE_Exhausted)
+    └─ 是（已力竭） → Stamina >= ExhaustedThreshold? → RemoveActiveGameplayEffectBySourceEffect (GE_Exhausted)
 ```
+
+**阈值设计**：
+- 进入力竭：Stamina = 0
+- 退出力竭：Stamina ≥ 15（ExhaustedThreshold）
+- 好处：防止体力在阈值边缘反复触发力竭状态
 
 ### UpdateMoving（Tick 调用，仅服务端）
 
@@ -127,10 +130,10 @@ Is Valid (ASC)
 - [x] BeginPlay 获取 BP_Character
 - [x] WaitForASC 定时器轮询获取 ASC（通过 GSCCore）
 - [x] 绑定 OnGameplayTagChange 事件
+- [x] 绑定 OnAttributeChange 事件（GSCCore 官方绑定）
 - [x] HandleTagChanged → Switch → HandleRunning
 - [x] 奔跑体力消耗（Apply/Remove GE_StaminaDrain_Sprint）
-- [x] InitWaitAttributeChanged 属性监听（Async Task 模式）
-- [x] HandleStaminaChanged 力竭处理（Stamina <= 20）
+- [x] HandleStaminaChanged 力竭处理（滞后阈值：0进入/15退出）
 - [x] 移动状态检测逻辑（Has Authority 鉴权）
 - [ ] 红灯死亡判定逻辑
 

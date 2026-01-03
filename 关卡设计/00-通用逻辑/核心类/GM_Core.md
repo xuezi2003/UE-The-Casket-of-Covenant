@@ -29,11 +29,11 @@ GM 子类通过配置以下变量实现关卡差异化：
 
 | GM | Level Character Component Class | Level Behavior Tree | Level Ability Set | Level IMC | Level Sub State Tree |
 |----|-------------------------------|---------------------|-------------------|-----------|---------------------|
-| GM_Endurance | Comp_Endurance | BT_Endurance | AbilitySet_Endurance | IMC_Endurance | ST_Endurance |
+| GM_Endurance | Comp_Character_Endurance | BT_Endurance | AbilitySet_Endurance | IMC_Endurance | ST_Endurance |
 | GM_Logic | Comp_Logic | BT_Logic | None | None | ST_Logic |
 | GM_Courage | Comp_Courage | BT_Courage | None | IMC_Courage | ST_Courage |
 | GM_Insight | Comp_Insight | BT_Insight | None | None | ST_Insight |
-| GM_Sacrifice | Comp_Endurance | BT_Sacrifice | AbilitySet_Endurance | IMC_Endurance | ST_Sacrifice |
+| GM_Sacrifice | Comp_Character_Endurance | BT_Sacrifice | AbilitySet_Endurance | IMC_Endurance | ST_Sacrifice |
 
 ## 关键函数
 
