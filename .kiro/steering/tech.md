@@ -16,9 +16,13 @@
 | Target System | 玩家锁定/视线检测（木偶监视等） | [GitHub Wiki](https://github.com/mklabs/ue4-targetsystemplugin/wiki) |
 | MOTS (Object Throwing System) | 物体投掷系统（关卡1、5） | [参考文档](../参考文档/MOTS_Documentation.md) |
 | Advanced Sessions | 高级会话管理（Steam 集成） | [GitHub](https://github.com/mordentral/AdvancedSessionsPlugin) / [论坛](https://forums.unrealengine.com/t/advanced-sessions-plugin/30020) |
-| State Tree | 游戏流程状态管理 | UE5 内置 |
-| Behavior Tree | AI 行为控制 | UE5 内置 |
+| **Logic Driver Pro** | **状态机系统（计划重构用）** | [官方文档](https://logicdriver.com/docs/) |
+| State Tree | 游戏流程状态管理（**计划迁移至 Logic Driver Pro**） | UE5 内置 |
+| Behavior Tree | AI 行为控制（**AI 暂定保留**） | UE5 内置 |
 | PCG (Procedural Content Generation) | 场景/道具随机生成 | UE5 内置 |
+
+> [!NOTE]
+> **状态机重构计划**：所有涉及「状态」「阶段」切换的「流程」和「物体」将使用 **Logic Driver Pro** 重构。AI 行为暂定继续使用 Behavior Tree。
 
 ## 数据驱动
 
@@ -81,7 +85,7 @@ Preparing（WaitingStart → SetLock → FillAI）
 2. **Danger 标签统一处理**：GE_Moving 统一处理所有移动相关的 Danger 标签，其他 GE 只负责各自的 Action 标签
 3. **IMC 架构**：每关卡一个完整 IMC（包含通用输入 + 关卡专属输入），不使用多 IMC 组合
 4. **AbilitySet 赋予时机**：在 Character.InitPlayer 里通过 GiveAbilitySet 赋予，确保客户端输入绑定生效
-5. **属性监听方式**：使用 Async Task `Wait for Attribute Changed`，不使用 GSCCore 委托（存在网络同步问题）
+5. **属性监听方式**：使用 GSCCore 官方提供的 `OnAttributeChange` 事件绑定
 
 ## 文档语言
 
