@@ -65,7 +65,7 @@
 **关卡专属配置架构**：
 - **LevelIMC**：每个关卡一个完整的 IMC（包含通用输入 + 关卡专属输入），不与 IMC_Core 组合
 - **LevelAbilitySet**：每个关卡一个 AbilitySet，包含该关卡所需的所有 Ability
-- **Input Action 共用**：IA 资产（如 IA_Core_Move、IA_Core_Sprint）跨关卡共用
+- **Input Action 可跨关卡使用**：IA 资产（如 IA_Core_Move、IA_Core_Sprint）可在多个关卡中使用
 
 ## 事件图表
 
@@ -225,4 +225,5 @@ LevelAbilitySet 有效？→ GSCAbilitySystemComponent.GiveAbilitySet(LevelAbili
 ## 相关文档
 
 - [外观加载.md](../外观加载.md)
-- [输入与属性.md](../输入与属性.md)
+- [输入系统.md](../输入系统.md)
+- [属性系统.md](../属性系统.md)

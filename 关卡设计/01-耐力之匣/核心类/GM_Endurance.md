@@ -20,7 +20,8 @@
 |--------|-----|------|
 | Level Ability Set | AbilitySet_Endurance | 关卡1 技能集 |
 | Level Behavior Tree | BT_Endurance | 关卡1 AI 行为树 |
-| Level Character Component Class | Comp_Character_Endurance | 关卡1 操作组件 |
+| Level Character Component Class | Comp_Character_Endurance | 关卡1 Character 组件 |
+| Level PC Component Class | Comp_PC_Endurance | 关卡1 PC 组件 |
 | Level IMC | IMC_Endurance | 关卡1 输入映射 |
 | Level Sub State Tree | ST_Endurance | 关卡1 子状态树 |
 
@@ -47,6 +48,7 @@ Get Actor Of Class (BP_BornVol)
 - [x] Level Ability Set 已配置（AbilitySet_Endurance）
 - [x] Level Behavior Tree 已配置（空壳）
 - [x] Level Character Component Class 已配置（Comp_Character_Endurance）
+- [x] Level PC Component Class 已配置（Comp_PC_Endurance）
 - [x] Level Sub State Tree 已配置（ST_Endurance）
 - [x] Level IMC 已配置（IMC_Endurance）
 - [x] GetSpawnPos 已重写

@@ -18,22 +18,23 @@
 |--------|------|--------|------|----------|
 | Level Ability Set | GSCAbility Set | None | 当前关卡技能集 | ✅ |
 | Level Behavior Tree | 行为树 | None | AI 行为树资产 | ✅ |
-| Level Character Component Class | Actor Component Class | None | 关卡专属组件类 | ✅ |
+| Level Character Component Class | Actor Component Class | None | 关卡专属 Character 组件类 | ✅ |
+| Level PC Component Class | Actor Component Class | None | 关卡专属 PC 组件类 | ✅ |
 | Level IMC | Input Mapping Context | None | 关卡专属输入映射 | ✅ |
 | Level Sub State Tree | State Tree | None | 关卡专属子状态树（InProgress 阶段加载） | ✅ |
 | NeedPlayerCnt | 整数 | 10 | 目标玩家数量 | ✅ |
 
-## 关卡配置驱动（待实现）
+## 关卡配置驱动
 
 GM 子类通过配置以下变量实现关卡差异化：
 
-| GM | Level Character Component Class | Level Behavior Tree | Level Ability Set | Level IMC | Level Sub State Tree |
-|----|-------------------------------|---------------------|-------------------|-----------|---------------------|
-| GM_Endurance | Comp_Character_Endurance | BT_Endurance | AbilitySet_Endurance | IMC_Endurance | ST_Endurance |
-| GM_Logic | Comp_Logic | BT_Logic | None | None | ST_Logic |
-| GM_Courage | Comp_Courage | BT_Courage | None | IMC_Courage | ST_Courage |
-| GM_Insight | Comp_Insight | BT_Insight | None | None | ST_Insight |
-| GM_Sacrifice | Comp_Character_Endurance | BT_Sacrifice | AbilitySet_Endurance | IMC_Endurance | ST_Sacrifice |
+| GM | Character 组件 | PC 组件 | Behavior Tree | Ability Set | IMC | Sub State Tree |
+|----|----------------|---------|---------------|-------------|-----|----------------|
+| GM_Endurance | Comp_Character_Endurance | Comp_PC_Endurance | BT_Endurance | AbilitySet_Endurance | IMC_Endurance | ST_Endurance |
+| GM_Logic | Comp_Logic | Comp_PC_Logic | BT_Logic | None | None | ST_Logic |
+| GM_Courage | Comp_Courage | Comp_PC_Courage | BT_Courage | None | IMC_Courage | ST_Courage |
+| GM_Insight | Comp_Insight | Comp_PC_Insight | BT_Insight | None | None | ST_Insight |
+| GM_Sacrifice | Comp_Character_Sacrifice | Comp_PC_Sacrifice | BT_Sacrifice | AbilitySet_Sacrifice | IMC_Sacrifice | ST_Sacrifice |
 
 ## 关键函数
 

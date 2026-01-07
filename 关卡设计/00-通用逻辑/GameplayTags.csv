@@ -52,4 +52,6 @@ Gameplay.Event.Activate.Fall,Gameplay.Event.Activate.Fall,"触发自己进入摔
 Gameplay.Event.Dodge,Gameplay.Event.Dodge,"闪避相关事件"
 Gameplay.Event.Dodge.InvincibleStart,Gameplay.Event.Dodge.InvincibleStart,"闪避无敌帧开始（动画通知发送）"
 Gameplay.Event.Dodge.InvincibleEnd,Gameplay.Event.Dodge.InvincibleEnd,"闪避无敌帧结束（动画通知发送）"
+Gameplay.Event.QTE,Gameplay.Event.QTE,"QTE 相关事件"
+Gameplay.Event.QTE.Result,Gameplay.Event.QTE.Result,"QTE 结果通知（客户端→服务器，EventMagnitude: 1=成功, 0=失败）"
 
