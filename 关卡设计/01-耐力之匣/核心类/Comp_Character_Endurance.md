@@ -42,7 +42,7 @@ Is Valid?
     └─ No → 继续等待
 ```
 
-**注意**：ASC 挂在 PlayerState 上（GSC 架构），必须通过 GSCCore 组件获取。使用 GSCCore 官方提供的事件绑定，不再使用自定义 Async Task。
+**注意**：ASC 挂在 PlayerState 上（GSC 架构），必须通过 GSCCore 组件获取。
 
 ### HandleAttributeChanged（自定义事件）
 
@@ -118,22 +118,8 @@ Is Valid (ASC)
 
 **GE_Moving 效果**：
 - 添加 `Player.State.Moving` 标签（表示移动中）
-- 添加 `Player.State.Danger` 标签（红灯时被检测到会死亡）
+- 添加 `Player.State.Danger` 标签（红灯时被检测到会扣 HP）
 
 ## 待实现
 
-| 功能 | 说明 |
-|------|------|
-| 红灯死亡判定 | 监听 GS.IsDetecting + 检查 Player.State.Danger |
-
-- [x] 蓝图已创建
-- [x] BeginPlay 获取 BP_Character
-- [x] WaitForASC 定时器轮询获取 ASC（通过 GSCCore）
-- [x] 绑定 OnGameplayTagChange 事件
-- [x] 绑定 OnAttributeChange 事件（GSCCore 官方绑定）
-- [x] HandleTagChanged → Switch → HandleRunning
-- [x] 奔跑体力消耗（Apply/Remove GE_StaminaDrain_Sprint）
-- [x] HandleStaminaChanged 力竭处理（滞后阈值：0进入/15退出）
-- [x] 移动状态检测逻辑（Has Authority 鉴权）
-- [ ] 红灯死亡判定逻辑
-
+- [ ] 红灯伤害判定逻辑（监听 GS.IsDetecting + 检查 Player.State.Danger）

@@ -104,15 +104,3 @@ Branch: Is Any Montage Playing? (防止重复触发)
     ↓
 (注意：蒙太奇回调中不再包含任何检测开关逻辑)
 ```
-
-## 实现状态
-
-- [x] 蓝图已创建
-- [x] 骨骼网格已配置
-- [x] 动画蓝图已创建
-- [x] 动画蓝图状态机（BackIdle/Turn/FaceIdle）
-- [x] 监听 GS_Endurance 事件（OnIsRedLightChange、OnPlayerDetected）
-- [x] SkeletalMesh 设置 Always Tick Pose
-- [x] HandleIsRedLightChange 实现检测开关逻辑（Delay + Server_SetDetecting）
-- [x] HandlePlayerDetected 播放 Anim_Detect_Face_Montage 蒙太奇
-

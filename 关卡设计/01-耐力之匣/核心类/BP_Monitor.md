@@ -1,6 +1,6 @@
 # BP_Monitor（监视器 Actor）
 
-**职责**：视线检测，红灯时判定危险状态并触发死亡（仅 DS 执行检测逻辑）
+**职责**：视线检测，红灯时判定危险状态并造成伤害（仅 DS 执行检测逻辑）
 
 **父类**：Actor
 
@@ -44,7 +44,7 @@ Monitor 启动定时检测（CheckInterval 间隔）
     ↓
 判断射线结果
     ├─ 命中 BP_Monitor → 无遮挡 → 检查 Danger 标签
-    │   ├─ 有 Danger 标签 → 触发死亡
+    │   ├─ 有 Danger 标签 → 造成 34 点伤害
     │   └─ 无 Danger 标签 → 安全
     └─ 命中障碍物/其他玩家 → 有遮挡 → 安全
 ```
@@ -75,7 +75,7 @@ IsDetecting = true → 启动检测定时器
 IsDetecting = false → 停止检测定时器
 ```
 
-## 死亡触发流程
+## 伤害触发流程
 
 ```
 射线命中 Monitor + 玩家有 Danger 标签
@@ -86,7 +86,7 @@ GS 广播 OnPlayerDetected 事件
     ↓
 BP_Puppet 监听事件 → 播放 Anim_Detect 蒙太奇
     ↓
-对玩家造成伤害（HP 归零 → 淘汰）
+对玩家造成 34 点伤害（HP 归零 → 淘汰）
 ```
 
 ## 网络说明
@@ -94,12 +94,6 @@ BP_Puppet 监听事件 → 播放 Anim_Detect 蒙太奇
 - 检测逻辑仅在 DS 执行（HasAuthority 检查）
 - Client 的 Monitor 不执行检测，只是占位
 
-## 实现状态
+## 待实现
 
-- [x] 蓝图已创建
-- [x] DetectionBox 组件（横跨场地）
-- [x] 监听 GS.OnDetectionChange 事件
-- [x] Line Trace 视线检测（玩家头部 → +X）
-- [x] Danger 标签判定
-- [x] 调用 Multicast_PlayerDetected 广播
-- [ ] 对玩家造成伤害（HP 归零 → 淘汰）
+- [ ] 对玩家造成 34 点伤害（HP 归零 → 淘汰）

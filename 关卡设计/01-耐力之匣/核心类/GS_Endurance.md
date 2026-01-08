@@ -32,22 +32,7 @@
 | Server_SetDetecting | Server | 设置 IsDetecting（由 BP_Puppet 的 HandleIsRedLightChange 调用） |
 | Multicast_PlayerDetected | Multicast | 广播 OnPlayerDetected（由 Monitor 调用，所有端执行） |
 
-## 实现状态
-
-- [x] 蓝图已创建
-- [x] 继承 GS_Core
-- [x] Preparing Duration 已配置
-- [x] In Progress Duration 已配置
-- [x] IsRedLight 变量已添加（RepNotify）
-- [x] OnIsRedLightChange 事件分发器
-- [x] OnRep_IsRedLight 调用事件分发器
-- [x] IsDetecting 变量（RepNotify）
-- [x] OnDetectionChange 事件分发器
-- [x] OnPlayerDetected 事件分发器
-- [x] Server_SetDetecting 函数
-- [x] Multicast_PlayerDetected 函数
-
-## 待添加变量
+## 待实现
 
 | 变量名 | 类型 | 用途 |
 |--------|------|------|

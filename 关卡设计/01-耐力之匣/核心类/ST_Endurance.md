@@ -33,11 +33,3 @@ Root
 ## 待实现
 
 - [ ] 时长衰减逻辑（随轮次增加，绿灯时间缩短）
-
-## 实现状态
-
-- [x] 状态树已创建
-- [x] GreenLight/RedLight 状态已添加
-- [x] STT_SetRedLight 任务已创建
-- [x] 状态转换已配置
-- [x] Delay 绑定 GS 的 Interval 变量

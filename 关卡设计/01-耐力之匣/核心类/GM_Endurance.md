@@ -40,15 +40,3 @@ Get Actor Of Class (BP_BornVol)
 | Actor | 用途 |
 |-------|------|
 | BP_BornVol | 出生区域，GetSpawnPos 从中获取随机点 |
-
-## 实现状态
-
-- [x] 蓝图已创建
-- [x] 类配置已设置
-- [x] Level Ability Set 已配置（AbilitySet_Endurance）
-- [x] Level Behavior Tree 已配置（空壳）
-- [x] Level Character Component Class 已配置（Comp_Character_Endurance）
-- [x] Level PC Component Class 已配置（Comp_PC_Endurance）
-- [x] Level Sub State Tree 已配置（ST_Endurance）
-- [x] Level IMC 已配置（IMC_Endurance）
-- [x] GetSpawnPos 已重写
