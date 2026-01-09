@@ -68,14 +68,6 @@ GSCUserWidget / GSCUWHud 提供以下可覆盖事件：
 
 ---
 
-## MOTS (Multiplayer Object Throwing System)
-- **开发者**: Dreamrise Studios
-- **Fab 商店**: https://www.fab.com/listings/a2421ef9-8ce3-40f4-8999-7b149292d2a0
-- **用途**: 投掷系统（关卡1、关卡5 均使用，部分逻辑相似）
-- **项目文档**: [MOTS_Documentation.md](MOTS_Documentation.md)
-
----
-
 ## Logic Driver Lite
 - **官网**: https://logicdriver.com
 - **官方文档**: https://logicdriver.com/docs/
