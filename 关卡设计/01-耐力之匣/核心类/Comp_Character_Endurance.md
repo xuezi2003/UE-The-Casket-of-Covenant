@@ -7,6 +7,15 @@
 > [!NOTE]
 > **命名规范**：`Comp_Character_xxx` 挂载在 Character 上处理服务端逻辑，`Comp_PC_xxx` 挂载在 PlayerController 上处理客户端逻辑（如 QTE UI）。
 
+### 组件复制配置（Class Defaults）
+
+| 属性 | 值 | 说明 |
+|------|:---:|------|
+| **Component Replicates** | ✅ | 组件变量（如 ThrowItemID）需要同步到客户端 |
+
+> [!IMPORTANT]
+> **动态组件同步**：必须在服务端执行 `Add Actor Component`（通过 `Switch Has Authority`）。组件开启 `Component Replicates` 后由系统自动同步。详见 [BP_Character_Game.md](BP_Character_Game.md#initplayer-流程)。
+
 ## 变量
 
 | 变量名 | 类型 | 用途 |
@@ -119,6 +128,41 @@ Is Valid (ASC)
 **GE_Moving 效果**：
 - 添加 `Player.State.Moving` 标签（表示移动中）
 - 添加 `Player.State.Danger` 标签（红灯时被检测到会扣 HP）
+
+---
+
+## 道具系统接口 ✅
+
+### 新增变量
+
+| 变量名 | 类型 | 复制 | 说明 |
+|--------|------|:----:|------|
+| ThrowItemID | DataTableRowHandle | ✅ RepNotify | 当前持有的投掷道具 ID |
+
+### 新增函数
+
+| 函数 | 权限 | 说明 | 状态 |
+|------|------|------|:----:|
+| `SetThrowItemID(NewItemID)` | Server | 使用通知设置 ThrowItemID | ✅ |
+| `OnRep_ThrowItemID` | Client | RepNotify，客户端同步后触发 | ✅ |
+| `GetThrowItemID()` | Any | 获取当前持有道具 ID | ✅ |
+| `ClearThrowItemID()` | Server | 清空持有道具（需 Switch Has Authority） | ✅ |
+
+### OnRep_ThrowItemID
+
+```
+OnRep_ThrowItemID
+    ↓
+Call OnThrowItemChanged (ThrowItemID)
+```
+
+### Event Dispatchers
+
+| 事件名 | 参数 | 说明 |
+|--------|------|------|
+| `OnThrowItemChanged` | NewItemID (DataTableRowHandle) | 道具变更时触发（用于 UI 更新） |
+
+---
 
 ## 待实现
 

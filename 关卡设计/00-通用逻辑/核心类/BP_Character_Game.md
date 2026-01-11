@@ -181,28 +181,33 @@ Y Axis → Add Controller Pitch Input (Up/Down)
 
 ### InitPlayer 流程
 
+使用 **Sequence** 节点并行执行多个初始化分支：
+
 ```
-SET PS（保存引用）
-    ↓
-Bind Event to On Player Avatar Change → HandleAvatarChange
-    ↓
-Bind Event to On Player Num Change → HandleNumChange
-    ↓
-Update Player Num + Update Player Avatar
-    ↓
-Init Speed
-    ↓
-LevelCharacterComponentClass 有效？→ Add Actor Component
-    ↓
-LevelIMC 有效？→ SET GSCAbilityInputBinding.InputMappingContext = LevelIMC
-    ↓
-LevelAbilitySet 有效？→ GSCAbilitySystemComponent.GiveAbilitySet(LevelAbilitySet)
+Sequence
+├─ then_0: 事件绑定
+│   SET PS → Bind OnPlayerAvatarChange → Bind OnPlayerNumChange
+│
+├─ then_1: 组件创建（仅服务端）
+│   Switch Has Authority
+│       └─ Authority → Add Actor Component (LevelCharacterComponentClass)
+│
+├─ then_2: 技能系统初始化
+│   ClearAbilitySet → GiveAbilitySet(LevelAbilitySet)
+│       → SET InputMappingContext = IMC_Endurance
+│       → SET ASC → HandleSpeedRateChanged
+│
+└─ then_3: 外观同步
+    UpdatePlayerNum → UpdatePlayerAvatar
 ```
+
+> [!IMPORTANT]
+> **组件创建必须只在服务端执行**：通过 `Switch Has Authority` 确保只有服务端调用 `Add Actor Component`。组件需启用 `Component Replicates`，引擎会自动复制到客户端。
 
 **关键点**：
 - LevelIMC 设置到 GSCAbilityInputBinding 组件的 InputMappingContext 属性
 - LevelAbilitySet 通过 GiveAbilitySet 赋予，同时建立输入绑定
-- InitPlayer 在服务器和客户端都执行，确保输入绑定在客户端生效
+- 组件添加仅服务端执行，复制系统负责同步到客户端
 
 ### HandleSpeedRateChanged / InitSpeed 逻辑
 
