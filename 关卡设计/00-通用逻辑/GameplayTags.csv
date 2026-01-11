@@ -56,4 +56,6 @@ Gameplay.Event.Dodge.InvincibleStart,Gameplay.Event.Dodge.InvincibleStart,"闪�
 Gameplay.Event.Dodge.InvincibleEnd,Gameplay.Event.Dodge.InvincibleEnd,"闪避无敌帧结束（动画通知发送）"
 Gameplay.Event.QTE,Gameplay.Event.QTE,"QTE 相关事件"
 Gameplay.Event.QTE.Result,Gameplay.Event.QTE.Result,"QTE 结果通知（客户端→服务器，EventMagnitude: 1=成功, 0=失败）"
+Gameplay.Event.Aim,Gameplay.Event.Aim,"瞄准相关事件"
+Gameplay.Event.Aim.End,Gameplay.Event.Aim.End,"投掷完成后通知 GA_Aim 结束"
 

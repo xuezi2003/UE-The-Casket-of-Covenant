@@ -138,22 +138,63 @@ Is Valid (ASC)
 | 变量名 | 类型 | 复制 | 说明 |
 |--------|------|:----:|------|
 | ThrowItemID | DataTableRowHandle | ✅ RepNotify | 当前持有的投掷道具 ID |
+| ThrowItemData | S_ItemData | ❌ | 缓存的道具数据（由 OnRep 查表填充） |
+| PropInHandComp | StaticMeshComponent | ❌ | 手持道具组件引用 |
 
 ### 新增函数
 
 | 函数 | 权限 | 说明 | 状态 |
 |------|------|------|:----:|
 | `SetThrowItemID(NewItemID)` | Server | 使用通知设置 ThrowItemID | ✅ |
-| `OnRep_ThrowItemID` | Client | RepNotify，客户端同步后触发 | ✅ |
+| `OnRep_ThrowItemID` | Client | RepNotify，查表更新 ThrowItemData | ✅ |
 | `GetThrowItemID()` | Any | 获取当前持有道具 ID | ✅ |
-| `ClearThrowItemID()` | Server | 清空持有道具（需 Switch Has Authority） | ✅ |
+| `ClearThrowItemID()` | Server | 清空持有道具 | ✅ |
+| `Multicast_ShowPropInHand(IsShow)` | NetMulticast | 同步显示/隐藏手持道具 | ✅ |
+| `ShowPropInHand()` | Local | 动态添加组件并附加到 Socket | ✅ |
+| `ClearPropInHand()` | Local | 销毁手持道具组件 | ✅ |
 
-### OnRep_ThrowItemID
+### OnRep_ThrowItemID ✅
 
 ```
 OnRep_ThrowItemID
     ↓
 Call OnThrowItemChanged (ThrowItemID)
+    ↓
+ThrowItemID.RowName != None?
+    ├─ True → Get Data Table Row → SET ThrowItemData
+    └─ False → SET ThrowItemData = 空结构体
+```
+
+### Multicast_ShowPropInHand(IsShow) ✅
+
+**类型**：NetMulticast, Reliable, Executes On All
+
+```
+IsShow?
+    ├─ True → ShowPropInHand()
+    └─ False → ClearPropInHand()
+```
+
+### ShowPropInHand ✅
+
+```
+AddComponentByClass (StaticMeshComponent)
+    ↓
+SET PropInHandComp
+    ↓
+SetStaticMesh (ThrowItemData.PropMesh)
+    ↓
+AttachToComponent (BP_Character.Mesh, Socket_Throw)
+```
+
+### ClearPropInHand ✅
+
+```
+SetStaticMesh (PropInHandComp, None)  ← 先清空 Mesh（立即生效）
+    ↓
+DestroyComponent (PropInHandComp)
+    ↓
+SET PropInHandComp = None
 ```
 
 ### Event Dispatchers

@@ -12,12 +12,13 @@
 
 ```
 BP_Item_Base (Actor)
-├── Root (Scene Component) ← 根组件
-├── ShowMesh (Static Mesh) ← 场地状态展示模型
-├── PropMesh (Static Mesh) ← 手持状态小模型（默认隐藏）
-├── DetectionBox (Sphere Collision, R=200) ← 高亮提示触发
-├── InteractBox (Sphere Collision, R=50) ← 交互触发（拾取/陷阱）
-└── StateMachineComponent (SMInstance) ← Logic Driver Lite 状态机
+├── Scene (Scene Component) ← 根组件
+├── ShowMesh (Static Mesh) ← 场地展示模型 (NoCollision)
+├── PropMesh (Static Mesh) ← 手持投掷模型 (NoCollision, 初始 HiddenInGame=false, Visibility=false)
+├── DetectionBox (Sphere Collision, R=200)
+├── InteractBox (Sphere Collision, R=50)
+├── StateMachineComponent (SMInstance)
+└── ProjectileMovement (PMC) ← Flying 状态运动控制
 ```
 
 ### 组件配置
@@ -25,10 +26,25 @@ BP_Item_Base (Actor)
 | 组件 | 关键设置 |
 |------|----------|
 | **ShowMesh** | 默认可见；无碰撞（检测由 Box 负责） |
-| **PropMesh** | 默认隐藏（Hidden in Game = true）；无碰撞 |
+| **PropMesh** | Hidden in Game = false；通过 Set Visibility 控制显隐；无碰撞 |
 | **DetectionBox** | Collision Profile = OverlapOnlyPawn；Radius = 200 |
 | **InteractBox** | Collision Profile = OverlapOnlyPawn；Radius = 50 |
 | **StateMachineComponent** | **Start on Begin Play = ✅**；Component Replicates = ✅ |
+| **ProjectileMovement** | 见下方详细配置 |
+
+### ProjectileMovement 配置 ✅
+
+**位置**：BP_Item_Base → Components → ProjectileMovement → Details 面板
+
+| 分类 | 参数 | 值 | 说明 |
+|------|------|-----|------|
+| **Projectile** | 初始速度 (Initial Speed) | 0 | GA_Throw 设置 Velocity |
+| **Projectile** | 最大速度 (Max Speed) | 3000 | - |
+| **Projectile** | 矢体引力比例 (Projectile Gravity Scale) | 1.0 | - |
+| **Projectile** | 旋转跟随速度 (Rotation Follows Velocity) | ✅ | - |
+| **Projectile Bounces** | 应当反弹 (Should Bounce) | ❌ | - |
+| **移动组件** | 自动注册更新组件 | ✅ | 勾选，自动驱动 Root 运动 |
+| **激活** | 自动启用 (Auto Activate) | ❌ | Flying 状态手动激活 |
 
 ### Actor 复制设置（Class Defaults → Replication）
 
@@ -46,31 +62,45 @@ BP_Item_Base (Actor)
 
 ## 变量 ✅
 
-| 变量名 | 类型 | 复制 | 默认值 | 说明 |
-|--------|------|:----:|--------|------|
-| ItemID | Data Table Row Handle | ✅ | None | 核心数据源，指定道具 ID（RepNotify） |
-| ItemData | S_ItemData | ❌ | Structure | 运行时缓存的数据（查表得来） |
+| 变量名 | 类型 | 复制 | 默认值 | Expose on Spawn | 说明 |
+|--------|------|:----:|--------|:---------------:|------|
+| ItemID | Data Table Row Handle | ✅ | None | ✅ | 核心数据源（RepNotify） |
+| ItemData | S_ItemData | ❌ | Structure | ❌ | 运行时缓存的数据 |
+| InitialState | E_ItemState | ❌ | InField | ✅ | 初始状态（GA_Throw 设为 Flying） |
+
+### E_ItemState 枚举
+
+| 枚举值 | 显示名 | 说明 |
+|--------|--------|------|
+| InField | 待拾取 | 场地道具 |
+| Flying | 投掷中 | GA_Throw 生成的道具 |
+| Trap | 待触发 | Banana 落地后 |
+
+### BeginPlay ✅
+
+```
+Event BeginPlay
+    ↓
+Switch Has Authority
+    └─ Authority ↓
+InitItem()  ← 服务端主动初始化（Expose on Spawn 已生效）
+    ↓
+Switch on InitialState
+    ├─ InField → (默认，状态机自动从 InField 开始)
+    ├─ Flying → SMComp.GetInstance().SwitchActiveStateByQualifiedName("Flying")
+    └─ Trap → SMComp.GetInstance().SwitchActiveStateByQualifiedName("Trap")
+```
 
 ### 构造脚本 (Construction Script) ✅
 
 ```
-Get Data Table Row (DT_ItemData, RowName=ItemID)
-    ↓
-SET ItemData
-    ↓
-ShowMesh.SetStaticMesh(ItemData.ShowMesh)
-PropMesh.SetStaticMesh(ItemData.PropMesh)  ← 可能为 None
+InitItem()  ← 有效性检查在 InitItem 内部
 ```
 
 ### OnRep_ItemID ✅
 
 ```
-Get Data Table Row (DT_ItemData, RowName=ItemID)
-    ↓
-SET ItemData
-    ↓
-ShowMesh.SetStaticMesh(ItemData.ShowMesh)
-PropMesh.SetStaticMesh(ItemData.PropMesh)
+InitItem()  ← 有效性检查在 InitItem 内部
 ```
 
 ### EItemType 枚举 ✅
@@ -97,18 +127,29 @@ PropMesh.SetStaticMesh(ItemData.PropMesh)
 
 ## 函数 ✅
 
-### 函数总览
+### InitItem (核心初始化) ✅
 
-| 名称 | 权限 | 说明 | 状态 |
-|------|------|------|:----:|
-| `OnRep_ItemID` | Client | 客户端收到 ID 后查表更新 ItemData 和模型 | ✅ |
-| `OnPickup` | Server | 拾取逻辑（存 ItemID 到角色，Destroy） | ✅ |
-| `HandleThrowablePickUp` | Server | Throwable 分支处理 | ✅ |
-| `HandleBuffPickUp` | Server | Buff 分支处理（GiveAbilityAndActivateOnce） | ✅ |
-| `HandleResourcePickUp` | Server | Resource 分支处理 | ✅ |
-| `SetHighlight` | Any | 高亮控制（Stencil Value = 1） | ✅ |
-| `OnTrap` | Server | **虚函数**，陷阱触发逻辑（子类重写） | ✅ |
-| `InitItem` | Any | 查表初始化（ConstructionScript/OnRep 共用） | ✅ |
+**权限**：Any
+
+```
+Event InitItem
+    ↓
+ItemID.RowName != None ?
+    ├─ 否 → 返回
+    └─ 是 ↓
+Get Data Table Row (DT_ItemData, RowName=ItemID)
+    ↓
+SET ItemData
+    ↓
+ShowMesh.SetStaticMesh(ItemData.ShowMesh)
+PropMesh.SetStaticMesh(ItemData.PropMesh)
+ShowMesh.SetCollisionProfileName("NoCollision")
+PropMesh.SetCollisionProfileName("NoCollision")
+```
+
+> [!IMPORTANT]
+> **视觉组件配置**：`ShowMesh` 和 `PropMesh` 仅作为视觉展示，必须关闭碰撞以免干扰物理模拟。`PropMesh` 的 `Hidden In Game` 应为 **False**，通过 `Set Visibility` 控制其在不同状态下的表现。
+
 
 ### OnPickup ✅
 
@@ -168,7 +209,7 @@ ShowMesh.SetCustomDepthStencilValue(1)  ← 物品统一使用 Stencil Value = 1
 | 状态 | 使用场景 | On Begin | On Hit/Overlap |
 |------|----------|----------|----------------|
 | **InField** | 场地道具 | ShowMesh 可见，检测框启用 | 拾取 → Destroy |
-| **Flying** | 投掷中 | PropMesh 物理模拟，InteractBox 检测 | OnHit 虚函数 |
+| **Flying** | 投掷中 | PMC 驱动，InteractBox 检测 | OnHit 虚函数 |
 | **Trap** | Banana 陷阱 | ShowMesh 可见，检测框启用 | 触碰 → Apply Stagger → Destroy |
 
 ### 状态转换
@@ -209,20 +250,21 @@ InteractBox → Unbind All Events from OnComponentBeginOverlap
 ### Flying 状态实现 ✅
 
 > [!NOTE]
-> - PropMesh 只做展示和物理模拟，不做碰撞
+> - 使用 ProjectileMovement 控制运动
 > - InteractBox 负责碰撞检测，触发 OnHit 虚函数
 
-**On State Begin**：
-```
-ShowMesh.SetVisibility(false)
-PropMesh.SetVisibility(true)
-PropMesh.SetSimulatePhysics(true)
-DetectionBox.SetCollisionEnabled(NoCollision)
-InteractBox.SetCollisionEnabled(QueryOnly)
+**位置**：`Content/0_/Blueprints/Items/SM_Item` → Flying 状态 → On State Begin
 
-Bind Event to OnComponentBeginOverlap (InteractBox)
-    → HandleFlyOverlap
+**On State Begin**（按顺序执行）：
 ```
+1. ShowMesh.SetVisibility(false)
+2. PropMesh.SetVisibility(true)
+3. ProjectileMovement.Activate(Reset=true)
+4. DetectionBox.SetCollisionEnabled(NoCollision)
+5. InteractBox.SetCollisionEnabled(QueryOnly)
+6. Bind Event to OnComponentBeginOverlap (InteractBox) → HandleFlyOverlap
+```
+
 
 **HandleFlyOverlap**：
 ```
@@ -330,13 +372,14 @@ Is Locally Controlled?
 | SMStateMachineComponent | ✅ |
 | SM_Item InField 状态 | ✅ |
 | SM_Item Trap 状态 | ✅ |
-| SM_Item Flying 状态 | ✅ 主要逻辑已完成，未测试 |
+| SM_Item Flying 状态 | ✅ |
 | 双框检测 | ✅ |
-| 网络复制测试 | ❌ |
+| 网络复制测试 | ✅ |
 
 ---
 
 ## 相关文档
 
 - [道具系统.md](../道具系统.md)
+- [瞄准投掷系统.md](../GAS/瞄准投掷系统.md)
 - [总体策划.md](../总体策划.md)

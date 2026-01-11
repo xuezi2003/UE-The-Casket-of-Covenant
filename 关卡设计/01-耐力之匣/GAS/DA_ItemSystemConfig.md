@@ -46,4 +46,5 @@ MakeEffectContainerSpecFromContainer (ConfigAsset.AimEffectContainer)
 ## 相关文档
 
 - [道具系统.md](../道具系统.md)
+- [瞄准投掷系统.md](瞄准投掷系统.md)
 - [BP_Item_Base.md](../核心类/BP_Item_Base.md)
