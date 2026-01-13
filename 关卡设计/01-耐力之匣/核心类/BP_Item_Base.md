@@ -39,7 +39,7 @@ BP_Item_Base (Actor)
 | 分类 | 参数 | 值 | 说明 |
 |------|------|-----|------|
 | **Projectile** | 初始速度 (Initial Speed) | 0 | GA_Throw 设置 Velocity |
-| **Projectile** | 最大速度 (Max Speed) | 3000 | - |
+| **Projectile** | 最大速度 (Max Speed) | 0 | **无限制**（避免速度被钳制） |
 | **Projectile** | 矢体引力比例 (Projectile Gravity Scale) | 1.0 | - |
 | **Projectile** | 旋转跟随速度 (Rotation Follows Velocity) | ✅ | - |
 | **Projectile Bounces** | 应当反弹 (Should Bounce) | ❌ | - |
@@ -57,6 +57,9 @@ BP_Item_Base (Actor)
 
 > [!NOTE]
 > **Net Load on Client** 仅对关卡中预放置的 Actor 有效。PCG 运行时生成的 Actor 无需此选项，仅依赖 Replicates。
+
+> [!IMPORTANT]
+> **场景配置要求**：地面（Floor）等静态物体必须勾选「生成重叠事件」(Generate Overlap Events)，否则 InteractBox 的 Overlap 检测无法触发。
 
 ---
 
@@ -282,7 +285,7 @@ InteractBox → Unbind All Events from OnComponentBeginOverlap
 
 **On State Begin**：
 ```
-ShowMesh.SetSimulatePhysics(false)
+ProjectileMovement.Deactivate()  ← 停用 PMC
 ShowMesh.SetVisibility(true)
 DetectionBox.SetCollisionEnabled(NoCollision)  ← Trap 不需要高亮
 InteractBox.SetCollisionEnabled(QueryOnly)
@@ -381,5 +384,6 @@ Is Locally Controlled?
 ## 相关文档
 
 - [道具系统.md](../道具系统.md)
+- [BP_Item_Subclasses.md](BP_Item_Subclasses.md)
 - [瞄准投掷系统.md](../GAS/瞄准投掷系统.md)
 - [总体策划.md](../总体策划.md)

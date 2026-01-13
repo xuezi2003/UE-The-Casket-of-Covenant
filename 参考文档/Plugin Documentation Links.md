@@ -124,3 +124,11 @@ GSCUserWidget / GSCUWHud 提供以下可覆盖事件：
 - **Shape layer**: 形状层
 - **Progress layer**: 进度层（核心）
 - **Pattern layer**: 图案层
+
+---
+
+## Path Tracer Toolkit
+- **说明书**: [Path_Tracer_Documentation.pdf](./Path_Tracer_Documentation.pdf)
+- **用途**: 替代 HISM 的投掷轨迹线渲染（支持圆角、实线、小球虚线等多种模式）
+- **核心组件**: `BP_PathTracer`
+- **核心函数**: `Draw Path` (接收 Vector Array)

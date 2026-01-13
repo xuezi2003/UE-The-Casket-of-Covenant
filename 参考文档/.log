@@ -1,35 +1,462 @@
-（一）核心架构搭建
-（1）完成游戏实例全局数据管理，包括玩家记录、唯一编号和外观同步
-（2）搭建状态树流程框架，实现准备、进行、结算三阶段的主状态树，以及红绿灯切换的关卡子状态树（后期会使用Logic Driver重构）
-（3）创建耐力之匣（关卡1）专属的游戏模式和游戏状态
-（二）木偶视线检测系统
-（1）实现转身动画与检测逻辑解耦
-（2）木偶实现；监视器使用自定义射线追踪通道实现视线检测
-（3）完成玩家互相遮挡功能验证，修复蒙太奇播放期间检测暂停和退出红灯检测不停止问题
-（三）玩家状态判定与基础移动
-（1）设计gameplaytag系统
-（1）扩展玩家动作标签和状态标签
-（2）实现角色组件，通过速度检测驱动移动效果应用
-（3）完成奔跑、蹲行、跳跃三大基础移动系统，包括各自的技能、效果、标签 和 体力消耗
-（4）实现体力自动回复和力竭机制，修复速度倍率属性同步和蹲下模型位置错误问题
-（5）搭建开发测试关卡和开发模式，创建红灯触发体积便于调试
-（四）玩家交互系统
-（1）推搡系统：球形追踪检测，命中无敌目标则推搡者摔倒，命中普通目标则目标失衡
-（2）闪避系统：闪避蒙太奇期间触发无敌帧，提供短暂无敌效果
-（3）失衡系统：被推搡后进入失衡状态，需通过QTE恢复，超时则触发摔倒
-（4）摔倒系统：倒地5秒后自动起身，期间处于危险状态
-（五）QTE系统
-（1）创建耐力之匣控制器组件，实现启动/结束/关闭QTE接口 and 客户端/服务器RPC
-（2）创建失衡QTE界面组件，实现指针移动、目标区域随机变化 and 命中判定逻辑
-（3）修改失衡技能区分玩家分支（并行等待事件+超时延时）与AI分支（概率判定）
-（4）完成全流程测试，修复界面重复创建、指针不移动、目标区域变化异常、命中判定角度环绕等问题
-（六）数据资产重构
-（1）创建推搡系统数据资产，集中管理4个技能及QTE界面参数
-（2）更新激活阻止标签配置，确保无敌状态下不可被失衡或摔倒
-（七）道具系统设计与实现
-（1）确定持有规则：投掷类最多1个（覆盖替换）、Buff类可多种（同种重置时间）、资源类即时消耗
-（2）设计道具基类：组件结构（展示模型、持有模型、检测盒、拾取盒）、双框检测机制、状态机（场景中→飞行中→陷阱态）
-（3）实现道具基类蓝图：构造脚本、网络同步、事件分发器（拾取、命中、陷阱触发）、状态机
-（4）扩展角色耐力组件道具接口：投掷道具标识变量（带网络复制通知）和设置/获取/清空函数
-（5）实现瞄准/投掷技能：上半身分离动画、输入释放等待、推搡互斥阻止
-（6）完成核心功能验证：检测框、拾取、瞄准
+PowerShell 7.5.4
+Loading personal and system profiles took 1506ms.
+(base) PS C:\Users\jerry> cd D:\Doc_UE\FiveBox\Content\0_
+(base) PS D:\Doc_UE\FiveBox\Content\0_> tree /f "D:\Doc_UE\FiveBox\Content\0_"
+卷 Doc 的文件夹 PATH 列表
+卷序列号为 046C-ABDA
+D:\DOC_UE\FIVEBOX\CONTENT\0_
+├─Character
+│  └─Player
+│      │  BP_Character_Game.uasset
+│      │
+│      ├─Anim
+│      │  │  ABP_Character.uasset
+│      │  │
+│      │  ├─BlendSpace
+│      │  │      BS_Crouch_Idle_Walk_Run.uasset
+│      │  │      BS_Normal_Idle_Walk_Run.uasset
+│      │  │
+│      │  └─Sequence
+│      │      ├─Endurance
+│      │      │  │  Anim_Dodge.uasset
+│      │      │  │  Anim_Dodge_Montage.uasset
+│      │      │  │  Anim_Fall_Down.uasset
+│      │      │  │  Anim_Fall_Down_Montage.uasset
+│      │      │  │  Anim_Fall_GetUp.uasset
+│      │      │  │  Anim_Fall_GetUp_Montage.uasset
+│      │      │  │  Anim_Fall_Idle.uasset
+│      │      │  │  Anim_Push.uasset
+│      │      │  │  Anim_Push_Montage.uasset
+│      │      │  │  Anim_Stagger_Idle.uasset
+│      │      │  │  Anim_Stagger_Start.uasset
+│      │      │  │  Anim_Stagger_Start_Montage.uasset
+│      │      │  │
+│      │      │  ├─Dodge
+│      │      │  │      Anim_Dodge.uasset
+│      │      │  │      Anim_Dodge_Montage.uasset
+│      │      │  │
+│      │      │  ├─Fall
+│      │      │  │      Anim_Fall_Down.uasset
+│      │      │  │      Anim_Fall_Down_Montage.uasset
+│      │      │  │      Anim_Fall_GetUp.uasset
+│      │      │  │      Anim_Fall_GetUp_Montage.uasset
+│      │      │  │      Anim_Fall_Idle.uasset
+│      │      │  │
+│      │      │  ├─Push
+│      │      │  │      Anim_Push.uasset
+│      │      │  │      Anim_Push_Montage.uasset
+│      │      │  │
+│      │      │  ├─Stagger
+│      │      │  │      Anim_Stagger_Idle.uasset
+│      │      │  │      Anim_Stagger_Start.uasset
+│      │      │  │      Anim_Stagger_Start_Montage.uasset
+│      │      │  │
+│      │      │  └─Throw
+│      │      │          Anim_Aim_Idle.uasset
+│      │      │          Anim_Throw.uasset
+│      │      │          Anim_Throw_Montage.uasset
+│      │      │
+│      │      └─Loco
+│      │          ├─Crouch
+│      │          │  │  Anim_Crouch_Idle.uasset
+│      │          │  │
+│      │          │  ├─Jog
+│      │          │  │      AS_Crouch_2F_Jog_B.uasset
+│      │          │  │      AS_Crouch_2F_Jog_BL.uasset
+│      │          │  │      AS_Crouch_2F_Jog_BR.uasset
+│      │          │  │      AS_Crouch_2F_Jog_F.uasset
+│      │          │  │      AS_Crouch_2F_Jog_FL.uasset
+│      │          │  │      AS_Crouch_2F_Jog_FR.uasset
+│      │          │  │
+│      │          │  └─Walk
+│      │          │          AS_Crouch_2F_Walk_B.uasset
+│      │          │          AS_Crouch_2F_Walk_BL.uasset
+│      │          │          AS_Crouch_2F_Walk_BR.uasset
+│      │          │          AS_Crouch_2F_Walk_F.uasset
+│      │          │          AS_Crouch_2F_Walk_FL.uasset
+│      │          │          AS_Crouch_2F_Walk_FR.uasset
+│      │          │
+│      │          └─Normal
+│      │              │  Anim_Normal_Idle.uasset
+│      │              │
+│      │              ├─Jump
+│      │              │      Anim_Fall_Loop.uasset
+│      │              │      Anim_Jump.uasset
+│      │              │      Anim_Land.uasset
+│      │              │
+│      │              ├─Run
+│      │              │      Anim_Run_Back.uasset
+│      │              │      Anim_Run_BackLeft.uasset
+│      │              │      Anim_Run_BackRight.uasset
+│      │              │      Anim_Run_Forward.uasset
+│      │              │      Anim_Run_ForwardLeft.uasset
+│      │              │      Anim_Run_ForwardRight.uasset
+│      │              │      Anim_Run_Left.uasset
+│      │              │      Anim_Run_Right.uasset
+│      │              │
+│      │              └─Walk
+│      │                      Anim_Walk_Back.uasset
+│      │                      Anim_Walk_BackLeft.uasset
+│      │                      Anim_Walk_BackRight.uasset
+│      │                      Anim_Walk_Forward.uasset
+│      │                      Anim_Walk_ForwardLeft.uasset
+│      │                      Anim_Walk_ForwardRight.uasset
+│      │                      Anim_Walk_Left.uasset
+│      │                      Anim_Walk_Right.uasset
+│      │
+│      └─Mesh
+│          │  SKM_Character.uasset
+│          │  SK_Character.uasset
+│          │
+│          └─MonitorHead
+│              │  SM_Monitor.uasset
+│              │
+│              ├─Mat
+│              │      material.uasset
+│              │      MF_MonitorBaseColor.uasset
+│              │      MI_Monitor.uasset
+│              │      M_Monitor.uasset
+│              │
+│              └─Tex
+│                      monitor_ii_texture_0.uasset
+│                      monitor_ii_texture_1.uasset
+│                      monitor_ii_texture_2.uasset
+│                      monitor_ii_texture_3.uasset
+│                      monitor_ii_texture_4.uasset
+│                      monitor_ii_texture_5.uasset
+│                      monitor_ii_texture_6.uasset
+│                      monitor_ii_texture_7.uasset
+│                      monitor_ii_texture_8.uasset
+│
+├─Core
+│  ├─BPL
+│  │      BPL_Common.uasset
+│  │      BPL_Game_Core.uasset
+│  │
+│  ├─Comp
+│  │      Comp_UI_core.uasset
+│  │
+│  ├─Config
+│  │      DT_Gameplaytags.uasset
+│  │      gameplaytags.csv
+│  │
+│  ├─Data
+│  │      E_LevelPhase.uasset
+│  │      S_AvatarData.uasset
+│  │      S_PlayerRecord.uasset
+│  │
+│  ├─Framework
+│  │      AIC_Core.uasset
+│  │      GI_FiveBox.uasset
+│  │      GM_Core.uasset
+│  │      GS_Core.uasset
+│  │      PC_Core.uasset
+│  │      PS_FiveBox.uasset
+│  │
+│  ├─GAS
+│  │  ├─AS
+│  │  │      BAS_Core.uasset
+│  │  │      DT_BAS_Core.uasset
+│  │  │
+│  │  ├─GA
+│  │  │      GA_Crouch.uasset
+│  │  │      GA_Jump.uasset
+│  │  │      GA_Sprint.uasset
+│  │  │
+│  │  └─GE
+│  │          GE_Crouch.uasset
+│  │          GE_Jumping.uasset
+│  │          GE_Sprint.uasset
+│  │
+│  ├─Input
+│  │  │  IMC_Core.uasset
+│  │  │
+│  │  └─Actions
+│  │          IA_Core_Crouch.uasset
+│  │          IA_Core_Jump.uasset
+│  │          IA_Core_Look.uasset
+│  │          IA_Core_Move.uasset
+│  │          IA_Core_Sprint.uasset
+│  │
+│  ├─ST
+│  │  │  ST_LevelFlow_Main.uasset
+│  │  │
+│  │  └─Tasks
+│  │          STT_AddMatchStatus.uasset
+│  │          STT_FillAI.uasset
+│  │          STT_SetMatchPhase.uasset
+│  │          STT_SimplePrint.uasset
+│  │          STT_StartLevelSubST.uasset
+│  │
+│  └─UI
+│      │  WBP_Core_Main.uasset
+│      │
+│      └─SubWidget
+│              WBP_Core_Avatar.uasset
+│              WBP_Core_Status.uasset
+│
+├─Level
+│  ├─1_Dev_Endurance
+│  │  ├─BP
+│  │  │  ├─Debug
+│  │  │  │      BP_Temp.uasset
+│  │  │  │
+│  │  │  ├─Framework
+│  │  │  │      GM_Dev_Endurance.uasset
+│  │  │  │      GS_Dev_Endurance.uasset
+│  │  │  │
+│  │  │  └─Volume
+│  │  │          BP_Vol_SetRedLight.uasset
+│  │  │          BP_Vol_TriggerInvisible.uasset
+│  │  │          BP_Vol_TriggerStagger.uasset
+│  │  │
+│  │  ├─Map
+│  │  │      L_Dev_Endurance.umap
+│  │  │
+│  │  └─Resource
+│  │      └─Mesh
+│  │              SM_Base.uasset
+│  │
+│  └─1_Endurance
+│      ├─AI
+│      │      BTB_Endurance.uasset
+│      │      BT_Endurance.uasset
+│      │
+│      ├─BP
+│      │  ├─Actor
+│      │  │  ├─Item_Actor
+│      │  │  │  │  BP_Item_Base.uasset
+│      │  │  │  │  BP_TrajectoryDisplay.uasset
+│      │  │  │  │  BP_Vol_Highlight.uasset
+│      │  │  │  │  PPI_OutlineInstance.uasset
+│      │  │  │  │  SM_Item.uasset
+│      │  │  │  │
+│      │  │  │  ├─Items
+│      │  │  │  │      BP_Item_Banana.uasset
+│      │  │  │  │      BP_Item_Bomb.uasset
+│      │  │  │  │      BP_Item_Coin.uasset
+│      │  │  │  │      BP_Item_Lighting.uasset
+│      │  │  │  │      BP_Item_MedicalKit.uasset
+│      │  │  │  │
+│      │  │  │  └─Item_Config
+│      │  │  │          DT_ItemData.json
+│      │  │  │          DT_ItemData.uasset
+│      │  │  │          E_ItemState.uasset
+│      │  │  │          E_ItemType.uasset
+│      │  │  │          PPI_OutlineInstance.uasset
+│      │  │  │          SM_Item.uasset
+│      │  │  │          S_ItemData.uasset
+│      │  │  │
+│      │  │  └─Level_Actor
+│      │  │      │  BP_BornVol.uasset
+│      │  │      │  BP_Vol_Highlight.uasset
+│      │  │      │
+│      │  │      ├─BP_Monitor
+│      │  │      │      BP_Monitor.uasset
+│      │  │      │
+│      │  │      └─BP_Puppet
+│      │  │          │  BP_Puppet.uasset
+│      │  │          │
+│      │  │          ├─Anim
+│      │  │          │      ABP_Puppet.uasset
+│      │  │          │      Anim_BackIdle.uasset
+│      │  │          │      Anim_Detect_Face.uasset
+│      │  │          │      Anim_Detect_Face_Montage.uasset
+│      │  │          │      Anim_Face_Idle.uasset
+│      │  │          │      Anim_Trun.uasset
+│      │  │          │      Anim_Trun_inv.uasset
+│      │  │          │
+│      │  │          └─Mesh
+│      │  │                  SKM_Puppet.uasset
+│      │  │                  SK_Puppet.uasset
+│      │  │
+│      │  ├─Comp
+│      │  │      Comp_Character_Endurance.uasset
+│      │  │      Comp_PC_Endurance.uasset
+│      │  │
+│      │  └─Framework
+│      │          GM_Endurance.uasset
+│      │          GS_Endurance.uasset
+│      │
+│      ├─GAS
+│      │  │  AbilitySet_Endurance.uasset
+│      │  │
+│      │  ├─DA
+│      │  │      DA_ItemSystemConfig.uasset
+│      │  │      DA_Item_Default.uasset
+│      │  │      DA_PushSystemConfig.uasset
+│      │  │      DA_Push_Default.uasset
+│      │  │
+│      │  ├─GA
+│      │  │  │  GA_Dodge.uasset
+│      │  │  │  GA_Exhausted.uasset
+│      │  │  │  GA_Fall.uasset
+│      │  │  │  GA_Push.uasset
+│      │  │  │  GA_Stagger.uasset
+│      │  │  │
+│      │  │  ├─Item
+│      │  │  │      GA_Aim.uasset
+│      │  │  │      GA_Item_Coin.uasset
+│      │  │  │      GA_Item_Lighting.uasset
+│      │  │  │      GA_Item_MedicalKit.uasset
+│      │  │  │      GA_Throw.uasset
+│      │  │  │
+│      │  │  └─Push
+│      │  │          GA_Dodge.uasset
+│      │  │          GA_Exhausted.uasset
+│      │  │          GA_Fall.uasset
+│      │  │          GA_Push.uasset
+│      │  │          GA_Stagger.uasset
+│      │  │
+│      │  └─GE
+│      │      │  GE_Moving.uasset
+│      │      │
+│      │      ├─Item
+│      │      │  │  GE_Aiming.uasset
+│      │      │  │  GE_Aiming_Danger.uasset
+│      │      │  │  GE_Throwing.uasset
+│      │      │  │
+│      │      │  ├─Buff
+│      │      │  │      GE_Buff_Lighting.uasset
+│      │      │  │      GE_Buff_MedicalKit.uasset
+│      │      │  │
+│      │      │  ├─Resource
+│      │      │  │      GE_Resource_Coin.uasset
+│      │      │  │
+│      │      │  └─Throw
+│      │      │          GE_Aiming.uasset
+│      │      │          GE_Aiming_Danger.uasset
+│      │      │          GE_Throwing.uasset
+│      │      │
+│      │      ├─Push
+│      │      │      GE_Dodging.uasset
+│      │      │      GE_Fallen.uasset
+│      │      │      GE_Invincible.uasset
+│      │      │      GE_Pushing.uasset
+│      │      │      GE_Staggered.uasset
+│      │      │
+│      │      └─Stamina
+│      │              GE_Exhausted.uasset
+│      │              GE_StaminaCost.uasset
+│      │              GE_StaminaDrain_Sprint.uasset
+│      │              GE_StaminaRegen.uasset
+│      │
+│      ├─Input
+│      │  │  IMC_Endurance.uasset
+│      │  │
+│      │  └─Action
+│      │          IA_Endurance_Aim.uasset
+│      │          IA_Endurance_Dodge.uasset
+│      │          IA_Endurance_Push.uasset
+│      │          IA_Endurance_QTE_Stagger.uasset
+│      │          IA_Endurance_Throw.uasset
+│      │
+│      ├─Map
+│      │      L_Endurance.umap
+│      │
+│      ├─ST
+│      │  │  ST_Endurance.uasset
+│      │  │
+│      │  └─STT
+│      │          STT_SetRedLight.uasset
+│      │
+│      └─UI
+│          └─SubWidget
+│              └─QTE
+│                      MI_Bg.uasset
+│                      MI_Point.uasset
+│                      MI_Target.uasset
+│                      WBP_Endurance_QTE_Stagger.uasset
+│
+└─Resource
+    ├─Avatar
+    │  │  DT_Tex_Avatar_Path.uasset
+    │  │  S_Tex_Avatar_Path.uasset
+    │  │
+    │  ├─Cloth
+    │  │
+    │  ├─Eye
+    │  │
+    │  ├─Face
+    │  │
+    │  ├─Hair
+    │  │
+    │  └─Mat
+    │          MF_AvatarComposite.uasset
+    │          MI_Avatar_UI.uasset
+    │          M_Avatar_UI.uasset
+    │
+    ├─Cloth
+    │  ├─Mat
+    │  │      MF_ClothColor.uasset
+    │  │      MF_NumComposite.uasset
+    │  │      MI_Cloth.uasset
+    │  │      M_Cloth.uasset
+    │  │
+    │  └─Tex
+    │
+    ├─Font
+    │      Font_Default.uasset
+    │
+    ├─Mesh
+    │  │  SM_Wall.uasset
+    │  │
+    │  └─Prop_Endurance
+    │      ├─Banana
+    │      │  ├─Mat
+    │      │  │      M_Banana.uasset
+    │      │  │      M_End.uasset
+    │      │  │      M_Eye.uasset
+    │      │  │
+    │      │  └─SM
+    │      │          Banana_Peel_Prop.uasset
+    │      │          Banana_Peel_Show.uasset
+    │      │
+    │      ├─Bomb
+    │      │  ├─Mat
+    │      │  │      M_Main.uasset
+    │      │  │      M_Rope.uasset
+    │      │  │      M_Strips.uasset
+    │      │  │
+    │      │  └─SM
+    │      │          Bomb_Prop.uasset
+    │      │          Bomb_Show.uasset
+    │      │
+    │      ├─Coin
+    │      │  ├─Mat
+    │      │  │      M_Coin.uasset
+    │      │  │
+    │      │  └─SM
+    │      │          Coin_Prop.uasset
+    │      │          Coin_Show.uasset
+    │      │
+    │      ├─Lighting
+    │      │  ├─Mat
+    │      │  │      M_Box.uasset
+    │      │  │
+    │      │  └─SM
+    │      │          Lightning_Show.uasset
+    │      │
+    │      ├─MedicalKit
+    │      │  ├─Mat
+    │      │  │      M_Box.uasset
+    │      │  │
+    │      │  └─SM
+    │      │          MedicalKit_Show.uasset
+    │      │
+    │      └─Shield
+    │          ├─Mat
+    │          │  │  M_shield.uasset
+    │          │  │
+    │          │  └─Tex
+    │          │          shield_texture_0.uasset
+    │          │          shield_texture_1.uasset
+    │          │          shield_texture_2.uasset
+    │          │
+    │          └─SM
+    │                  Shield_Show.uasset
+    │
+    └─Tex
+        └─BillBoard
+                T_Born.uasset
+                T_Vis.uasset
