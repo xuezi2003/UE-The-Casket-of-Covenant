@@ -79,18 +79,6 @@ SetActorHiddenInGame(NOT IsShow)
 
 ---
 
-## 实现状态
-
-| 功能 | 状态 |
-|------|:----:|
-| 组件结构 | ✅ |
-| 变量定义 | ✅ |
-| UpdateTrajectory | ✅ |
-| ShowTrajectory | ✅ |
-| GA_Aim 集成 | ✅ |
-
----
-
 ## 相关文档
 
 - [瞄准投掷系统.md](../GAS/瞄准投掷系统.md)

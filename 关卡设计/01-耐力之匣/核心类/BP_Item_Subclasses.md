@@ -61,14 +61,6 @@ DestroyActor
 > [!NOTE]
 > `OnTrapTriggered` Event Dispatcher 已在 BP_Item_Base 定义，Phase 9 做特效/音效时再调用。
 
-### 实现状态
-
-| 功能 | 状态 |
-|------|:----:|
-| OnHit 重写 | ✅ |
-| OnTrap 重写 | ✅ |
-| 网络同步测试 | ✅ |
-
 ---
 
 ## BP_Item_Bomb
@@ -119,14 +111,6 @@ Cast HitActor to BP_Character_Game
             └─ Completed: DestroyActor
 ```
 
-### 实现状态
-
-| 功能 | 状态 |
-|------|:----:|
-| OnHit 重写 | ✅ |
-| 范围检测 | ✅ |
-| 爆炸 VFX | ❌ (Phase 9) |
-
 ---
 
 ## BP_Item_Lighting
@@ -168,13 +152,6 @@ EndAbility
 | 持续时间 | 10s |
 | Granted Tags | `Player.State.Buffed.Lightning` |
 | Modifier | BAS_Core.SpeedRate, Multiply, 1.5 |
-
-### 实现状态
-
-| 功能 | 状态 |
-|------|:----:|
-| GA_Item_Lightning | ✅ |
-| GE_Buff_Lightning | ✅ |
 
 ---
 
@@ -221,16 +198,6 @@ EndAbility
 - GA_Fall：被炸弹击中时
 - BP_Monitor：被检测时（伤害减半）
 
-### 实现状态
-
-| 功能 | 状态 |
-|------|:----:|
-| GA_Item_Shield | ✅ |
-| GE_Buff_Shield | ✅ |
-| GA_Stagger 检查 | ✅ |
-| GA_Fall 检查 | ✅ |
-| BP_Monitor 检查 | ❌ |
-
 ---
 
 ## BP_Item_MedicalKit
@@ -269,13 +236,6 @@ EndAbility
 | 持续时间 | Instant |
 | Modifier | BAS_Core.HP, Add, 50 |
 
-### 实现状态
-
-| 功能 | 状态 |
-|------|:----:|
-| GA_Item_MedicalKit | ✅ |
-| GE_Buff_MedicalKit | ✅ |
-
 ---
 
 ## BP_Item_Coin
@@ -306,13 +266,6 @@ EndAbility
 |--------|-----|
 | 持续时间 | Instant |
 | Modifier | BAS_Core.Coin, Add, 1 |
-
-### 实现状态
-
-| 功能 | 状态 |
-|------|:----:|
-| GA_Item_Coin | ✅ |
-| GE_Resource_Coin | ✅ |
 
 ---
 

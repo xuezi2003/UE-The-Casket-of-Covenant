@@ -1,2 +1,4 @@
 .DS_Store
 参考文档/.log
+.agent/
+.kiro/

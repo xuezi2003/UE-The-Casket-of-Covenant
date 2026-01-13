@@ -360,25 +360,6 @@ Is Locally Controlled?
 
 ---
 
-## 实现状态
-
-| 功能 | 状态 |
-|------|:----:|
-| 组件结构 | ✅ |
-| EItemType 枚举 | ✅ |
-| S_ItemData 结构体 | ✅ |
-| DT_ItemData 数据表 | ⏳ (Mesh ✅ / Icon ❌ / ItemAbility ❌) |
-| 变量定义（ItemID/ItemData） | ✅ |
-| Construction Script | ✅ |
-| OnRep_ItemID / InitItem | ✅ |
-| Event Dispatchers | ✅ |
-| SMStateMachineComponent | ✅ |
-| SM_Item InField 状态 | ✅ |
-| SM_Item Trap 状态 | ✅ |
-| SM_Item Flying 状态 | ✅ |
-| 双框检测 | ✅ |
-| 网络复制测试 | ✅ |
-
 ---
 
 ## 相关文档

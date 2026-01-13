@@ -12,9 +12,10 @@
 |------|------|
 | GAS Companion | ASC 挂载、技能、属性、输入绑定 |
 | Blueprint Attributes | 蓝图 AttributeSet (BAS_Core) |
-| Logic Driver Lite | 状态机（关卡流程、红绿灯等） |
+| Logic Driver Lite | 状态机重构（计划中，当前使用 UE5 State Tree） |
 | iTween | 程序化动画、Tween 效果 |
 | SDF Robo Progress Bars | QTE 环形进度条 |
+| Path Tracer Toolkit | 投掷轨迹预测线渲染（Spline 路径可视化） |
 
 ## 架构模式
 
@@ -27,10 +28,3 @@
 - 数据同步：PlayerState 复制属性，GAS 自动同步
 - 权限模型：逻辑判定在 DS，表现在客户端
 - 无缝切换：ServerTravel 保留 PlayerState
-
-## **开发规范**
-
-- 严格遵循联网开发范式：数据同步、网络延迟、权限授权
-- 禁止编写临时 Demo 代码，所有代码必须是最终实现
-- 使用插件功能前必须查阅官方文档，禁止臆造 API
-- GameplayTag 修改**必须**需用户确认，并审阅所有引用处
