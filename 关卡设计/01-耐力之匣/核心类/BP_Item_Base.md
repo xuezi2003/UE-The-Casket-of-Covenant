@@ -29,7 +29,25 @@ BP_Item_Base (Actor)
 | **PropMesh** | Hidden in Game = false；通过 Set Visibility 控制显隐；无碰撞 |
 | **DetectionBox** | Collision Profile = OverlapOnlyPawn；Radius = 200 |
 | **InteractBox** | Collision Profile = OverlapOnlyPawn；Radius = 50 |
-| **StateMachineComponent** | **Start on Begin Play = ✅**；Component Replicates = ✅ |
+| **StateMachineComponent** | 见下方详细配置 |
+
+### StateMachineComponent 配置 ✅
+
+**位置**：BP_Item_Base → Components → StateMachineComponent → Details 面板
+
+| 属性 | 设置 | 说明 |
+|------|:----:|------|
+| State Machine Class | SM_Item | 道具状态机 |
+| Initialize on Begin Play | ✅ | |
+| Start on Begin Play | ✅ | |
+| Component Replicates | ✅ | 基础开关 |
+| State Change Authority | Server | 仅服务器可切换状态 |
+| Network Tick Configuration | Server | 仅服务器 Tick |
+| Network State Execution | **ClientAndServer** | **双端执行**（Mesh 可见性需要 Client 执行） |
+| Include Simulated Proxies | ✅ | 确保非本机玩家同步 |
+
+> [!IMPORTANT]
+> **为什么用 ClientAndServer？** Item 状态机的 On State Begin 中有 `ShowMesh/PropMesh.SetVisibility()` 视觉表现逻辑，必须在 Client 执行才能正确显示。
 | **ProjectileMovement** | 见下方详细配置 |
 
 ### ProjectileMovement 配置 ✅

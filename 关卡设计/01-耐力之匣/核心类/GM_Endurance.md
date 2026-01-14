@@ -23,7 +23,7 @@
 | Level Character Component Class | Comp_Character_Endurance | 关卡1 Character 组件 |
 | Level PC Component Class | Comp_PC_Endurance | 关卡1 PC 组件 |
 | Level IMC | IMC_Endurance | 关卡1 输入映射 |
-| Level Sub State Tree | ST_Endurance | 关卡1 子状态树 |
+| Level Sub SM | SM_Endurance | 关卡1 子状态机 |
 
 ## 重写函数
 

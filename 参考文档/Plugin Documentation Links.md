@@ -73,7 +73,7 @@ GSCUserWidget / GSCUWHud 提供以下可覆盖事件：
 - **官方文档**: https://logicdriver.com/docs/
 - **Fab 商店**: https://www.fab.com/listings/c2db80f4-4cdb-47cf-9c87-c5989a00adfd
 - **用途**: 状态机重构（计划中）
-- **当前状态**: `ST_LevelFlow_Main`、`ST_Endurance` 等目前使用 UE5 原生 State Tree，后续计划迁移到 Logic Driver Lite
+- **当前状态**: 已完成迁移，`SM_LevelFlow_Main`、`SM_Endurance` 使用 Logic Driver Lite 状态机
 
 ### Lite 版本支持的功能
 - 基础 FSM（状态、转换、条件）

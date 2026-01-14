@@ -1,7 +1,6 @@
 PowerShell 7.5.4
-Loading personal and system profiles took 1506ms.
-(base) PS C:\Users\jerry> cd D:\Doc_UE\FiveBox\Content\0_
-(base) PS D:\Doc_UE\FiveBox\Content\0_> tree /f "D:\Doc_UE\FiveBox\Content\0_"
+Loading personal and system profiles took 1100ms.
+(base) PS C:\Users\jerry> tree /f "D:\Doc_UE\FiveBox\Content\0_"
 卷 Doc 的文件夹 PATH 列表
 卷序列号为 046C-ABDA
 D:\DOC_UE\FIVEBOX\CONTENT\0_
@@ -129,12 +128,36 @@ D:\DOC_UE\FIVEBOX\CONTENT\0_
 │                      monitor_ii_texture_8.uasset
 │
 ├─Core
-│  ├─BPL
-│  │      BPL_Common.uasset
-│  │      BPL_Game_Core.uasset
-│  │
-│  ├─Comp
-│  │      Comp_UI_core.uasset
+│  ├─BP
+│  │  ├─BPL
+│  │  │      BPL_Common.uasset
+│  │  │      BPL_Game_Core.uasset
+│  │  │
+│  │  ├─Comp
+│  │  │      Comp_UI_core.uasset
+│  │  │
+│  │  ├─Framework
+│  │  │      AIC_Core.uasset
+│  │  │      GI_FiveBox.uasset
+│  │  │      GM_Core.uasset
+│  │  │      GS_Core.uasset
+│  │  │      PC_Core.uasset
+│  │  │      PS_FiveBox.uasset
+│  │  │
+│  │  └─GAS
+│  │      ├─AS
+│  │      │      BAS_Core.uasset
+│  │      │      DT_BAS_Core.uasset
+│  │      │
+│  │      ├─GA
+│  │      │      GA_Crouch.uasset
+│  │      │      GA_Jump.uasset
+│  │      │      GA_Sprint.uasset
+│  │      │
+│  │      └─GE
+│  │              GE_Crouch.uasset
+│  │              GE_Jumping.uasset
+│  │              GE_Sprint.uasset
 │  │
 │  ├─Config
 │  │      DT_Gameplaytags.uasset
@@ -144,29 +167,6 @@ D:\DOC_UE\FIVEBOX\CONTENT\0_
 │  │      E_LevelPhase.uasset
 │  │      S_AvatarData.uasset
 │  │      S_PlayerRecord.uasset
-│  │
-│  ├─Framework
-│  │      AIC_Core.uasset
-│  │      GI_FiveBox.uasset
-│  │      GM_Core.uasset
-│  │      GS_Core.uasset
-│  │      PC_Core.uasset
-│  │      PS_FiveBox.uasset
-│  │
-│  ├─GAS
-│  │  ├─AS
-│  │  │      BAS_Core.uasset
-│  │  │      DT_BAS_Core.uasset
-│  │  │
-│  │  ├─GA
-│  │  │      GA_Crouch.uasset
-│  │  │      GA_Jump.uasset
-│  │  │      GA_Sprint.uasset
-│  │  │
-│  │  └─GE
-│  │          GE_Crouch.uasset
-│  │          GE_Jumping.uasset
-│  │          GE_Sprint.uasset
 │  │
 │  ├─Input
 │  │  │  IMC_Core.uasset
@@ -178,15 +178,8 @@ D:\DOC_UE\FIVEBOX\CONTENT\0_
 │  │          IA_Core_Move.uasset
 │  │          IA_Core_Sprint.uasset
 │  │
-│  ├─ST
-│  │  │  ST_LevelFlow_Main.uasset
-│  │  │
-│  │  └─Tasks
-│  │          STT_AddMatchStatus.uasset
-│  │          STT_FillAI.uasset
-│  │          STT_SetMatchPhase.uasset
-│  │          STT_SimplePrint.uasset
-│  │          STT_StartLevelSubST.uasset
+│  ├─SM
+│  │      SM_LevelFlow_Main.uasset
 │  │
 │  └─UI
 │      │  WBP_Core_Main.uasset
@@ -232,11 +225,17 @@ D:\DOC_UE\FIVEBOX\CONTENT\0_
 │      │  │  │  │  SM_Item.uasset
 │      │  │  │  │
 │      │  │  │  ├─Items
-│      │  │  │  │      BP_Item_Banana.uasset
-│      │  │  │  │      BP_Item_Bomb.uasset
-│      │  │  │  │      BP_Item_Coin.uasset
-│      │  │  │  │      BP_Item_Lighting.uasset
-│      │  │  │  │      BP_Item_MedicalKit.uasset
+│      │  │  │  │  ├─Buff
+│      │  │  │  │  │      BP_Item_Lighting.uasset
+│      │  │  │  │  │      BP_Item_MedicalKit.uasset
+│      │  │  │  │  │      BP_Item_Shield.uasset
+│      │  │  │  │  │
+│      │  │  │  │  ├─Resource
+│      │  │  │  │  │      BP_Item_Coin.uasset
+│      │  │  │  │  │
+│      │  │  │  │  └─Throw
+│      │  │  │  │          BP_Item_Banana.uasset
+│      │  │  │  │          BP_Item_Bomb.uasset
 │      │  │  │  │
 │      │  │  │  └─Item_Config
 │      │  │  │          DT_ItemData.json
@@ -274,72 +273,70 @@ D:\DOC_UE\FIVEBOX\CONTENT\0_
 │      │  │      Comp_Character_Endurance.uasset
 │      │  │      Comp_PC_Endurance.uasset
 │      │  │
-│      │  └─Framework
-│      │          GM_Endurance.uasset
-│      │          GS_Endurance.uasset
-│      │
-│      ├─GAS
-│      │  │  AbilitySet_Endurance.uasset
+│      │  ├─Framework
+│      │  │      GM_Endurance.uasset
+│      │  │      GS_Endurance.uasset
 │      │  │
-│      │  ├─DA
-│      │  │      DA_ItemSystemConfig.uasset
-│      │  │      DA_Item_Default.uasset
-│      │  │      DA_PushSystemConfig.uasset
-│      │  │      DA_Push_Default.uasset
-│      │  │
-│      │  ├─GA
-│      │  │  │  GA_Dodge.uasset
-│      │  │  │  GA_Exhausted.uasset
-│      │  │  │  GA_Fall.uasset
-│      │  │  │  GA_Push.uasset
-│      │  │  │  GA_Stagger.uasset
-│      │  │  │
-│      │  │  ├─Item
-│      │  │  │      GA_Aim.uasset
-│      │  │  │      GA_Item_Coin.uasset
-│      │  │  │      GA_Item_Lighting.uasset
-│      │  │  │      GA_Item_MedicalKit.uasset
-│      │  │  │      GA_Throw.uasset
-│      │  │  │
-│      │  │  └─Push
-│      │  │          GA_Dodge.uasset
-│      │  │          GA_Exhausted.uasset
-│      │  │          GA_Fall.uasset
-│      │  │          GA_Push.uasset
-│      │  │          GA_Stagger.uasset
-│      │  │
-│      │  └─GE
-│      │      │  GE_Moving.uasset
+│      │  └─GAS
+│      │      │  AbilitySet_Endurance.uasset
 │      │      │
-│      │      ├─Item
-│      │      │  │  GE_Aiming.uasset
-│      │      │  │  GE_Aiming_Danger.uasset
-│      │      │  │  GE_Throwing.uasset
-│      │      │  │
-│      │      │  ├─Buff
-│      │      │  │      GE_Buff_Lighting.uasset
-│      │      │  │      GE_Buff_MedicalKit.uasset
-│      │      │  │
-│      │      │  ├─Resource
-│      │      │  │      GE_Resource_Coin.uasset
-│      │      │  │
-│      │      │  └─Throw
-│      │      │          GE_Aiming.uasset
-│      │      │          GE_Aiming_Danger.uasset
-│      │      │          GE_Throwing.uasset
+│      │      ├─DA
+│      │      │      DA_ItemSystemConfig.uasset
+│      │      │      DA_Item_Default.uasset
+│      │      │      DA_PushSystemConfig.uasset
+│      │      │      DA_Push_Default.uasset
 │      │      │
-│      │      ├─Push
-│      │      │      GE_Dodging.uasset
-│      │      │      GE_Fallen.uasset
-│      │      │      GE_Invincible.uasset
-│      │      │      GE_Pushing.uasset
-│      │      │      GE_Staggered.uasset
+│      │      ├─GA
+│      │      │  ├─Item
+│      │      │  │  ├─Buff
+│      │      │  │  │      GA_Item_Lighting.uasset
+│      │      │  │  │      GA_Item_MedicalKit.uasset
+│      │      │  │  │      GA_Item_Shield.uasset
+│      │      │  │  │
+│      │      │  │  ├─Resource
+│      │      │  │  │      GA_Item_Coin.uasset
+│      │      │  │  │
+│      │      │  │  └─Throw
+│      │      │  │          GA_Aim.uasset
+│      │      │  │          GA_Throw.uasset
+│      │      │  │
+│      │      │  └─Push
+│      │      │          GA_Dodge.uasset
+│      │      │          GA_Exhausted.uasset
+│      │      │          GA_Fall.uasset
+│      │      │          GA_Push.uasset
+│      │      │          GA_Stagger.uasset
 │      │      │
-│      │      └─Stamina
-│      │              GE_Exhausted.uasset
-│      │              GE_StaminaCost.uasset
-│      │              GE_StaminaDrain_Sprint.uasset
-│      │              GE_StaminaRegen.uasset
+│      │      └─GE
+│      │          │  GE_Moving.uasset
+│      │          │
+│      │          ├─Item
+│      │          │  ├─Buff
+│      │          │  │      GE_Buff_Lighting.uasset
+│      │          │  │      GE_Buff_MedicalKit.uasset
+│      │          │  │      GE_Buff_Shield.uasset
+│      │          │  │
+│      │          │  ├─Resource
+│      │          │  │      GE_Resource_Coin.uasset
+│      │          │  │
+│      │          │  └─Throw
+│      │          │          GE_Aiming.uasset
+│      │          │          GE_Aiming_Danger.uasset
+│      │          │          GE_Throwing.uasset
+│      │          │
+│      │          ├─Push
+│      │          │      GE_Dodging.uasset
+│      │          │      GE_Fallen.uasset
+│      │          │      GE_Invincible.uasset
+│      │          │      GE_Pushing.uasset
+│      │          │      GE_Staggered.uasset
+│      │          │      GE_StopMove.uasset
+│      │          │
+│      │          └─Stamina
+│      │                  GE_Exhausted.uasset
+│      │                  GE_StaminaCost.uasset
+│      │                  GE_StaminaDrain_Sprint.uasset
+│      │                  GE_StaminaRegen.uasset
 │      │
 │      ├─Input
 │      │  │  IMC_Endurance.uasset
@@ -354,11 +351,8 @@ D:\DOC_UE\FIVEBOX\CONTENT\0_
 │      ├─Map
 │      │      L_Endurance.umap
 │      │
-│      ├─ST
-│      │  │  ST_Endurance.uasset
-│      │  │
-│      │  └─STT
-│      │          STT_SetRedLight.uasset
+│      ├─SM
+│      │      SM_Endurance.uasset
 │      │
 │      └─UI
 │          └─SubWidget
@@ -374,13 +368,16 @@ D:\DOC_UE\FIVEBOX\CONTENT\0_
     │  │  S_Tex_Avatar_Path.uasset
     │  │
     │  ├─Cloth
+    │  │      T_cloth_1.uasset（以后的省略）
     │  │
     │  ├─Eye
-    │  │
+    │  │      T_eyes_1.uasset（以后的省略）
+    │  │ 
     │  ├─Face
-    │  │
+    │  │      T_face_1.uasset（以后的省略）
+    │  │     
     │  ├─Hair
-    │  │
+    │  │      T_hair_1.uasset（以后的省略）
     │  └─Mat
     │          MF_AvatarComposite.uasset
     │          MI_Avatar_UI.uasset
@@ -394,6 +391,10 @@ D:\DOC_UE\FIVEBOX\CONTENT\0_
     │  │      M_Cloth.uasset
     │  │
     │  └─Tex
+    │          DT_Tex_Num_Format.uasset
+    │          S_Tex_Num_Format.uasset
+    │          T_Cloth_Player.uasset
+    │          T_Num_100_0.uasset（以后的省略）
     │
     ├─Font
     │      Font_Default.uasset
@@ -460,3 +461,5 @@ D:\DOC_UE\FIVEBOX\CONTENT\0_
         └─BillBoard
                 T_Born.uasset
                 T_Vis.uasset
+
+(base) PS C:\Users\jerry>
