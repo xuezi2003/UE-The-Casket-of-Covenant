@@ -15,7 +15,7 @@
 2. 为 `GM_Endurance.GetSpawnPos()` 提供随机出生点
 
 > [!NOTE]
-> 本组件作为 `BP_Section_Start`（起点封闭墙）的子组件，跟随墙宽度缩放。
+> 本组件**手动摆放**。
 
 ---
 
@@ -77,15 +77,14 @@ Get Actor Of Class (BP_BornVol)
 
 ## 编辑器配置
 
-作为 `BP_Section_Start` 的子组件：
-- `SpawnVolume` 的 Box Extent 会跟随起点墙缩放
-- 确保体积位于墙内侧，不与墙壁 Mesh 重叠
+手动摆放时：
+- 通过 Box Extent 直接定义出生区域尺寸
+- 确保体积位于场地内，不与墙壁 Mesh 重叠
 - `SpawnHeight` 应确保玩家不会卡在地板里
 
 ---
 
 ## 相关文档
 
-- [BP_ArenaGenerator.md](BP_ArenaGenerator.md) - 场地生成器
 - [GM_Endurance.md](../../架构/GM_Endurance.md) - GameMode 引用
 - [场景组件.md](../场景组件.md) - 组件索引

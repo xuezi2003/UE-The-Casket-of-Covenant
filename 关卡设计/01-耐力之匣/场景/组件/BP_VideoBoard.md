@@ -4,9 +4,9 @@
 
 **父类**：Actor
 
-**实现状态**：❌ 待实现
+**实现状态**：⏳ 待测试
 
-**归属**：作为 `BP_Section_End` 的子组件
+**摆放方式**：手动摆放
 
 ---
 
@@ -16,17 +16,36 @@
 1. 增强终点区域的视觉效果
 2. 根据游戏状态播放不同内容的视频
 
-> [!NOTE]
-> 作为 BP_Section_End 的子组件时，需要**反缩放**以保持比例不变形。
 
 ---
 
 ## 组件结构
 
-- **SceneRoot**：根组件
-- **ScreenMesh**：屏幕/黑板外框 Static Mesh
-- **MediaPlane**：播放视频的平面 Mesh
-  - 绑定 Media Texture
+- **SM_BlackBoard**：黑板外框 Static Mesh
+- **SM_Plane**：Static Mesh (Plane)
+  - 材质实例：`MI_VideoBoard_Panel` ✅
+
+---
+
+## 材质
+
+### M_VideoBoard_Panel（父材质）
+
+**类型**：Unlit Material
+
+**节点结构**：
+```
+TexCoord[0] → CustomRotator (RotateVideo param) → Texture Sample (Media Texture) → Emissive Color
+```
+
+**参数**：
+| 参数名 | 类型 | 默认值 | 说明 |
+|--------|------|--------|------|
+| `RotateVideo` | Scalar | 0.0 | UV旋转角度 (0-1 对应 0-360°) |
+
+### MI_VideoBoard_Panel（材质实例）
+
+继承自 `M_VideoBoard_Panel`，用于 SM_Plane 组件。
 
 ---
 
@@ -34,8 +53,8 @@
 
 | 变量名 | 类型 | 说明 |
 |--------|------|------|
-| `MediaPlayer` | UMediaPlayer* | 媒体播放器 |
-| `VideoMap` | TMap<EVideoType, UMediaSource*> | 视频类型到资源的映射 |
+| `MediaPlayer` | Media Player Object Reference | 指向 `MP_VideoBoard` |
+| `VideoSourceMap` | Map<EVideoType, Media Source> | 枚举到视频源的映射 |
 
 ---
 
@@ -55,18 +74,28 @@
 
 根据视频类型播放对应视频。
 
+```
+If (Map_Find(VideoSourceMap, VideoType))
+    → MediaPlayer.OpenSource(FoundValue)
+    → MediaPlayer.Play()
+```
+
 ---
 
-## 缩放处理
+## 素材资源
 
-作为 BP_Section_End 子组件时：
-- 父级缩放时需要**反缩放**保持比例
-- 或者使用 World Space 锚定，只更新位置
+| 资源名 | 类型 | 状态 |
+|--------|------|:----:|
+| `MP_VideoBoard` | Media Player | ✅ |
+| `MP_VideoBoard_Video` | Media Texture | ✅ |
+| `FMS_Video_Green` | File Media Source | ✅ |
+| `FMS_Video_Red` | File Media Source | ✅ |
+| `FMS_Video_Detect` | File Media Source | ✅ |
+| `M_VideoBoard_Panel` | Material (Unlit) | ✅ |
 
 ---
 
 ## 相关文档
 
-- [BP_ArenaGenerator.md](BP_ArenaGenerator.md) - 场地生成器
-- [BP_Section_End](BP_ArenaGenerator.md#bp_section_end终点封闭墙) - 所属父组件
+- [BP_Section_封闭墙.md](BP_Section_封闭墙.md) - 起点/终点封闭墙
 - [场景组件.md](../场景组件.md) - 组件索引

@@ -2,6 +2,43 @@
 
 **用途**：黑板墙管理器，生成并管理多个 `BP_BlackBoardWithPaint`，驱动随机配对交换动画。
 
+---
+
+## Construction Script
+
+调用 `CreateBlackboards` 函数生成子黑板。
+
+---
+
+## 函数：CreateBlackboards
+
+**触发**：Construction Script
+
+**逻辑**：
+1. 销毁所有现有 ChildActorComponent
+2. 双重 For Loop：Row (0 to RowCnt-1)，Col (0 to ColCnt-1)
+3. Add ChildActorComponent：
+   - Class：BP_BlackBoardWithPaint
+   - Location：使用 Math Expression 计算中心对齐位置
+   - Scale：`BlackBoard_Scale`
+
+**位置计算**（中心对齐）：
+```
+Y = x * (y - ((z - 1) / 2.0))
+    x = BlackBoard_Interval.X
+    y = Temp_Col
+    z = ColCnt
+
+Z = x * (y - ((z - 1) / 2.0))
+    x = BlackBoard_Interval.Y
+    y = Temp_Row
+    z = RowCnt
+```
+
+**原点**：中心 (Y=0, Z=0)，向四周均匀展开
+
+---
+
 ## 变量
 
 | 变量名 | 类型 | 默认值 | 说明 |
@@ -72,5 +109,5 @@
 ## 相关文档
 
 - [BP_BlackBoardWithPaint.md](BP_BlackBoardWithPaint.md) - 子 Actor 文档
-- [BP_ArenaGenerator.md](BP_ArenaGenerator.md) - 场地生成器（BP_Section_Wall 包含本组件）
+- [BP_Section_中间组件.md](BP_Section_中间组件.md) - 墙段/柱段组件
 - [场景组件.md](../场景组件.md) - 组件索引

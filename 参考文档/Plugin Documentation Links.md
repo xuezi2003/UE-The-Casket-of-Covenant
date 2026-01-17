@@ -74,7 +74,7 @@ GSCUserWidget / GSCUWHud 提供以下可覆盖事件：
 - **Fab 商店**: https://www.fab.com/listings/c2db80f4-4cdb-47cf-9c87-c5989a00adfd
 - **用途**: 状态机重构（计划中）
 - **当前状态**: 已完成迁移，`SM_LevelFlow_Main`、`SM_Endurance` 使用 Logic Driver Lite 状态机
-- **最佳实践**: [Logic Driver Lite API 参考指南](./Plugins/Logic Driver Lite API 参考.md)
+- **最佳实践**: [Logic Driver Lite API 参考](./Plugins/Logic Driver Lite API 参考.md)
 
 ### Lite 版本支持的功能
 - 基础 FSM（状态、转换、条件）
@@ -138,7 +138,7 @@ GSCUserWidget / GSCUWHud 提供以下可覆盖事件：
 ---
 
 ## Fresh Cooked Tweens
-- **说明书**: [Fresh Cooked Tweens 使用指南](./Plugins/Fresh Cooked Tweens.md)
+- **说明书**: [Fresh Cooked Tweens](./Plugins/Fresh Cooked Tweens.md)
 - **用途**: 高性能 C++/Blueprint Tween 动画库
 - **核心功能**:
     - 轻量级 (Header-only based)
@@ -217,4 +217,60 @@ FAB 集成后，Megascans 纹理工作流发生变化：
 - 使用 FAB 资源时，选择 `M_EasyMapper_MASTER_FAB`
 - 原有 ARD 材质仍可用，旧项目不受影响
 - 两种材质都支持**禁用 ARD/ORM 工作流**，使用自定义独立贴图
+
+---
+
+## Modular Snap System (MSS)
+- **官方文档**: https://inu-games.com/2020/02/20/modular-snap-system-documentation/
+- **UE Marketplace**: 搜索 "Modular Snap System"
+- **支持论坛**: https://forums.unrealengine.com/unreal-engine/marketplace/1482720-mss-modular-snap-system-plugin
+- **作者**: Inu Games (Stan)
+- **用途**: 模块化建筑自动吸附系统，Socket 精确对接
+- **详细指南**: [Modular Snap System Documentation](./Plugins/Modular Snap System Documentation.md)
+
+### 核心功能
+- **Socket 自动匹配**：基于名称、距离、角度的智能吸附
+- **精确变换控制**：支持旋转步长、缩放匹配
+- **极性系统**：正极(+)/负极(-)/中性 Socket 匹配规则
+- **批量工具**：Export/Import Sockets Tool，支持多网格批处理
+- **高级选项**：AttachToParent、Snap to Pivot、Open Only 检查
+
+### Socket 命名规则
+- **基本格式**：`SnapPointName_Parameters`
+- **极性示例**：`Door+`、`Door-`、`Door`
+- **参数示例**：`Window_RX180_SY0`（X轴旋转180°步长，Y轴禁用缩放）
+- **附加参数**：`Socket_A`（自动附加到目标）
+
+### 适用场景
+- **模块化建筑**：墙体、门窗、柱子等组件精确对接
+- **场景搭建**：`BP_Section_封闭墙`、`BP_Section_中间组件` 等快速组装
+- **管线系统**：管道、电缆等需要精确连接的系统
+
+---
+
+## Advanced Light Pack
+- **文档来源**：Advanced Light Pack Document.pdf
+- **用途**：专业级灯光蓝图系统，支持开关、动画、音效和网络复制
+- **详细指南**：[Advanced Light Pack Documentation](./Plugins/Advanced Light Pack Documentation.md)
+
+### 核心特性
+- **58 个灯光蓝图**：各类灯具（吊灯、投影灯、工作室灯等）
+- **开关系统**：多开关控制，编辑器/游戏内均可使用
+- **动画系统**：Heat Up/Flick/Cooldown 三状态动画
+- **音效集成**：环境音效 + 动画音效
+- **网络复制**：内置多人游戏支持
+- **性能优化**：基于距离的 Tick Rate 优化
+
+### 主要类
+| 类 | 用途 |
+|---|------|
+| `BP_LightActorBase` | 所有灯光蓝图基类 |
+| `BP_LightSwitchBase` | 所有开关蓝图基类 |
+| `BP_LightControlComponent` | 控制灯光和材质 |
+| `BP_LightControl_AnimCycle` | 三状态动画控制 |
+
+### 适用场景
+- **封闭空间照明**：室内、地下室、走廊
+- **动态灯光效果**：开关动画、闪烁、预热
+- **多人游戏**：内置网络复制支持
 
