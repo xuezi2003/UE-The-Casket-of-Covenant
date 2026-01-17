@@ -1,4 +1,4 @@
-# SM_Endurance (Logic Driver State Machine)
+# SM_Endurance ([Logic Driver State Machine](../../../参考文档/Plugins/Logic Driver Lite API 参考.md))
 
 > [!NOTE]
 > **状态**: ✅ 已实现

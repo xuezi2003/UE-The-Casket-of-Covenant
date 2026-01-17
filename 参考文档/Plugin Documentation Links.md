@@ -74,6 +74,7 @@ GSCUserWidget / GSCUWHud 提供以下可覆盖事件：
 - **Fab 商店**: https://www.fab.com/listings/c2db80f4-4cdb-47cf-9c87-c5989a00adfd
 - **用途**: 状态机重构（计划中）
 - **当前状态**: 已完成迁移，`SM_LevelFlow_Main`、`SM_Endurance` 使用 Logic Driver Lite 状态机
+- **最佳实践**: [Logic Driver Lite API 参考指南](./Plugins/Logic Driver Lite API 参考.md)
 
 ### Lite 版本支持的功能
 - 基础 FSM（状态、转换、条件）
@@ -129,7 +130,91 @@ GSCUserWidget / GSCUWHud 提供以下可覆盖事件：
 ---
 
 ## Path Tracer Toolkit
-- **说明书**: [Path_Tracer_Documentation.pdf](./Path_Tracer_Documentation.pdf)
+- **说明书**: [Path_Tracer_Documentation.pdf](./Plugins/Path_Tracer_Documentation.pdf)
 - **用途**: 替代 HISM 的投掷轨迹线渲染（支持圆角、实线、小球虚线等多种模式）
 - **核心组件**: `BP_PathTracer`
 - **核心函数**: `Draw Path` (接收 Vector Array)
+
+---
+
+## Fresh Cooked Tweens
+- **说明书**: [Fresh Cooked Tweens 使用指南](./Plugins/Fresh Cooked Tweens.md)
+- **用途**: 高性能 C++/Blueprint Tween 动画库
+- **核心功能**:
+    - 轻量级 (Header-only based)
+    - 支持 C++ Lambda
+    - 丰富的 Easing 函数 (Bounce, Elastic etc.)
+    - Blueprint Async Task 支持
+
+---
+
+## OutlineMaker
+- **说明书**: [OutlineMaker - Documentation](./Plugins/OutlineMaker - Documentation.md)
+- **用途**: 高性能描边材质解决方案
+- **Web Store**: [Unreal Engine Marketplace](https://www.unrealengine.com/marketplace/en-US/slug/outline-maker)
+- **核心功能**:
+    - 可定制的各个部分（颜色、辉光、粗细）
+    - 自定义 "Pulse" 脉冲效果
+    - 正确的深度计算
+    - 预设支持 (Presets)
+
+---
+
+## IA Scatter
+- **Fab 商店**: https://www.fab.com/listings/ia-scatter
+- **用途**: 轻量级物体散布工具（障碍物、道具随机分布）
+- **API 参考**: [IA Scatter 参考](./Plugins/IA Scatter 参考.md)
+
+### 核心功能
+- 多种分布方法（点、线、面、样条线）
+- 追踪到表面（自动贴合地面）
+- 随机位置/旋转/缩放
+- 聚类生成
+- 重叠检测
+- 支持 Static Mesh 和 Blueprint Actor
+
+---
+
+## EasyMapper
+- **Fab 商店**: https://www.fab.com/listings/easymapper
+- **作者**: William Faucher
+- **用途**: 世界对齐纹理投影（Triplanar）、Nanite 位移、顶点混合
+
+### 核心功能
+- **世界对齐投影**：无需 UV，自动投影纹理到模型表面
+- **Nanite 位移/细分**：支持 Nanite 的 Tessellation/Displacement
+- **顶点混合**：最多混合 3 种材质，带高度遮罩实现自然过渡
+- **快速贴图**：整个关卡一键贴图，无需逐模型处理 UV
+
+### 使用方法
+
+1. 在 `Content/EasyMapper/Materials/Masters` 文件夹中找到 `M_EasyMapper_MASTER` 材质
+2. 右键 → 创建 Material Instance
+3. 在 Material Instance 中调整参数
+
+> [!IMPORTANT]
+> **不要修改 Master Material**，否则可能破坏功能！只修改 Material Instance。
+
+### Master Material 变体
+
+| 材质 | 用途 |
+|------|------|
+| `M_EasyMapper_MASTER` | 标准版本（ARD 工作流） |
+| `M_EasyMapper_MASTER_VT` | 虚拟纹理版本 |
+| `M_EasyMapper_MASTER_FAB` | FAB/Megascans 新版本（ORM 工作流） |
+
+### FAB 兼容说明
+
+FAB 集成后，Megascans 纹理工作流发生变化：
+
+| 旧版（ARD） | 新版（ORM） |
+|-------------|-------------|
+| Ambient Occlusion | Ambient Occlusion |
+| Roughness | Roughness |
+| **Displacement** | **Metallic** |
+| - | Displacement（独立贴图） |
+
+- 使用 FAB 资源时，选择 `M_EasyMapper_MASTER_FAB`
+- 原有 ARD 材质仍可用，旧项目不受影响
+- 两种材质都支持**禁用 ARD/ORM 工作流**，使用自定义独立贴图
+

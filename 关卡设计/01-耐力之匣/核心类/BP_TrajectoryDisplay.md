@@ -1,6 +1,6 @@
 # BP_TrajectoryDisplay（投掷预测线）
 
-> 使用 **Path Tracer Toolkit** 显示投掷轨迹预测线（离散小球）。
+> 使用 [Path Tracer Toolkit](../../../参考文档/Plugins/Path_Tracer_Documentation.pdf) 显示投掷轨迹预测线（离散小球）。
 
 **路径**：`Content/0_/Blueprints/Items/BP_TrajectoryDisplay`
 

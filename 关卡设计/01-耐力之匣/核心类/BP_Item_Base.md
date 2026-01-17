@@ -74,7 +74,7 @@ BP_Item_Base (Actor)
 | **Net Update Frequency** | 100 | 网络更新频率 |
 
 > [!NOTE]
-> **Net Load on Client** 仅对关卡中预放置的 Actor 有效。PCG 运行时生成的 Actor 无需此选项，仅依赖 Replicates。
+> **Net Load on Client** 仅对关卡中预放置的 Actor 有效。IA Scatter 运行时生成的 Actor 无需此选项，仅依赖 Replicates。
 
 > [!IMPORTANT]
 > **场景配置要求**：地面（Floor）等静态物体必须勾选「生成重叠事件」(Generate Overlap Events)，否则 InteractBox 的 Overlap 检测无法触发。
@@ -212,7 +212,7 @@ ShowMesh.SetCustomDepthStencilValue(1)  ← 物品统一使用 Stencil Value = 1
 ```
 
 > [!NOTE]
-> **Stencil Value 约定**：1 = 物品高亮。配合 OutlineMaker 插件的 Post Process Volume 使用。
+> **Stencil Value 约定**：1 = 物品高亮。配合 [OutlineMaker](../../../参考文档/Plugins/OutlineMaker - Documentation.md) 插件的 Post Process Volume 使用。
 
 ---
 
