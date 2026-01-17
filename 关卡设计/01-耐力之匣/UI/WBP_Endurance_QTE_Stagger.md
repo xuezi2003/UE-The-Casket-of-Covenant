@@ -203,4 +203,4 @@ Sequence
 ## 相关文档
 
 - [推搡系统.md](../GAS/推搡系统.md)（GA_Stagger QTE 逻辑）
-- [Comp_PC_Endurance.md](../核心类/Comp_PC_Endurance.md)
+- [Comp_PC_Endurance.md](../架构/Comp_PC_Endurance.md)

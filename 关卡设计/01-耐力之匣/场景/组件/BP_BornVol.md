@@ -71,7 +71,7 @@ Get Actor Of Class (BP_BornVol)
 → Return RandomPoint
 ```
 
-参见 [GM_Endurance.md](../../核心类/GM_Endurance.md)
+参见 [GM_Endurance.md](../../架构/GM_Endurance.md)
 
 ---
 
@@ -87,5 +87,5 @@ Get Actor Of Class (BP_BornVol)
 ## 相关文档
 
 - [BP_ArenaGenerator.md](BP_ArenaGenerator.md) - 场地生成器
-- [GM_Endurance.md](../../核心类/GM_Endurance.md) - GameMode 引用
+- [GM_Endurance.md](../../架构/GM_Endurance.md) - GameMode 引用
 - [场景组件.md](../场景组件.md) - 组件索引

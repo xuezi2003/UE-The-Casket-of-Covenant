@@ -32,8 +32,3 @@
 | Server_SetDetecting | Server | 设置 IsDetecting（由 BP_Puppet 的 HandleIsRedLightChange 调用） |
 | Multicast_PlayerDetected | Multicast | 广播 OnPlayerDetected（由 Monitor 调用，所有端执行） |
 
-## 待实现
-
-| 变量名 | 类型 | 用途 |
-|--------|------|------|
-| RoundCount | 整数 | 当前轮次（用于时长衰减计算） |

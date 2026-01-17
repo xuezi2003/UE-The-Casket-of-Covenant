@@ -71,4 +71,4 @@ PC_Core
 - [Comp_UI_Core.md](../UI/Comp_UI_Core.md) - 游戏级 UI 组件
 - [UI 架构概述](../UI/架构概述.md) - UI 分层设计
 - [输入系统.md](../输入系统.md) - 输入分层架构
-- [Comp_PC_Endurance.md](../../01-耐力之匣/核心类/Comp_PC_Endurance.md) - 关卡1 PC 组件
+- [Comp_PC_Endurance.md](../../01-耐力之匣/架构/Comp_PC_Endurance.md) - 关卡1 PC 组件

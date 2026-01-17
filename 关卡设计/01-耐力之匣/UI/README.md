@@ -14,5 +14,5 @@
 ## 相关文档
 
 - [推搡系统.md](../GAS/推搡系统.md)（QTE 逻辑）
-- [Comp_PC_Endurance.md](../核心类/Comp_PC_Endurance.md)
+- [Comp_PC_Endurance.md](../架构/Comp_PC_Endurance.md)
 - [通用 UI 架构](../../00-通用逻辑/UI/架构概述.md)

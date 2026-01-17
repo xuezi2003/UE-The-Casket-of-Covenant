@@ -259,7 +259,7 @@ TotalLength = StartDepth
 - [BP_BornVol.md](BP_BornVol.md) - 出生体积（✅ 已实现，作为 BP_Section_Start 子组件）
 - [BP_BlackboardWall.md](BP_BlackboardWall.md) - 黑板墙组件（✅ 已实现）
 - [BP_Camera.md](BP_Camera.md) - 监控摄像头（✅ 已实现）
-- [BP_Puppet.md](../../核心类/BP_Puppet.md) - 木偶（✅ 已实现，独立放置）
-- [BP_Monitor.md](../../核心类/BP_Monitor.md) - 监视器（坐标系参考）
+- [BP_Puppet.md](../木偶与监视器/BP_Puppet.md) - 木偶（✅ 已实现，独立放置）
+- [BP_Monitor.md](../木偶与监视器/BP_Monitor.md) - 监视器（坐标系参考）
 - [场景设计.md](../场景设计.md) - 场景设计要点
 - [场景组件.md](../场景组件.md) - 组件索引

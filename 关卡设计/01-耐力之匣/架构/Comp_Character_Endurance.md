@@ -14,7 +14,7 @@
 | **Component Replicates** | ✅ | 组件变量（如 ThrowItemID）需要同步到客户端 |
 
 > [!IMPORTANT]
-> **动态组件同步**：必须在服务端执行 `Add Actor Component`（通过 `Switch Has Authority`）。组件开启 `Component Replicates` 后由系统自动同步。详见 [BP_Character_Game.md](BP_Character_Game.md#initplayer-流程)。
+> **动态组件同步**：必须在服务端执行 `Add Actor Component`（通过 `Switch Has Authority`）。组件开启 `Component Replicates` 后由系统自动同步。详见 [BP_Character_Game.md](../../00-通用逻辑/核心类/BP_Character_Game.md#initplayer-流程)。
 
 ## 变量
 
