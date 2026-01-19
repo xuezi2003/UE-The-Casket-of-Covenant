@@ -2,7 +2,16 @@
 
 **用途**：黑板墙管理器，生成并管理多个 `BP_BlackBoardWithPaint`，驱动随机配对交换动画。
 
+## 组件结构
+
+```
+BP_BlackboardWall
+└── Scene
+    └── SM_Pivot ← 用于 MSS 吸附到 BP_Section_Wall
+```
+
 ---
+
 
 ## Construction Script
 
@@ -51,7 +60,7 @@ Z = x * (y - ((z - 1) / 2.0))
 | IdxPool | TArray\<int\> | - | 可用索引池（用于随机配对） |
 | SwapPairCnt | int | - | 每轮交换对数 |
 | SwapInterval | double | - | 交换间隔时间 |
-| ForwardBaseOffset | double | - | 前移基础偏移量（黑板宽度 × 2.1） |
+| ForwardOffset | double | - | 前移基础偏移量（本地坐标系） |
 | SwapTimerHandler | TimerHandle | - | 定时器句柄 |
 | FInv / MInv | double | - | 传递给子 Actor 的动画时长参数 |
 
@@ -67,9 +76,12 @@ Z = x * (y - ((z - 1) / 2.0))
 
 **then_1**：初始化交换逻辑
 1. 计算 `SwapPairCnt`、`SwapInterval`
-2. 计算 `ForwardBaseOffset = 黑板宽度 × 2.1`
+2. 计算 `ForwardOffset`（使用本地坐标系）：
+   ```
+   ForwardOffset = Dot(Abs(GetActorForwardVector()), ChildBlackBoards[0].GetActorBounds().BoxExtent) × 2.1
+   ```
 3. 调用 `SwapPaints` 启动首轮
-4. 延迟 0.2 秒后设置循环定时器
+4. 设置循环定时器（间隔 = SwapInterval + RandomFloat）
 
 ## 事件：SwapPaints
 
@@ -81,13 +93,18 @@ Z = x * (y - ((z - 1) / 2.0))
 ## 事件：SwapPairs (PairCnt: int)
 
 **逻辑**：
-1. 调用 `PreparePairData(PairCnt)` 获取配对数据
-2. 调用 `ActorA.SwapMoveTo(ForwardOffset, TargetPos=PosB)`
-3. 调用 `ActorB.SwapMoveTo(ForwardOffset, TargetPos=PosA)`
+1. 调用 `PreparePairData(PairCnt)` 获取配对数据（ActorA, ActorB, PosA, PosB, PairCnt_Plus）
+2. 计算位置差：`PosDiff = PosB - PosA`
+3. 使用点积提取本地坐标分量：
+   - `RightDelta = Dot(GetActorRightVector(), PosDiff)`
+   - `UpDelta = Dot(GetActorUpVector(), PosDiff)`
+4. 调用 ActorA.SwapMoveTo：
+   - `ForwardDelta = ((PairCnt_Plus × 2) - 1) × ForwardOffset`
+   - `RightDelta`、`UpDelta`、`TargetPos = PosB`
+5. 调用 ActorB.SwapMoveTo：
+   - `ForwardDelta = ((PairCnt_Plus × 2) - 0) × ForwardOffset`
+   - `RightDelta × -1`、`UpDelta × -1`、`TargetPos = PosA`
 
-**Offset 计算公式**（确保每个 Actor 唯一）：
-- ActorA: `((PairCnt_Plus × 2) - 1) × ForwardBaseOffset`
-- ActorB: `((PairCnt_Plus × 2) - 0) × ForwardBaseOffset`
 
 ## 函数：CreateIdxPool
 
@@ -109,5 +126,5 @@ Z = x * (y - ((z - 1) / 2.0))
 ## 相关文档
 
 - [BP_BlackBoardWithPaint.md](BP_BlackBoardWithPaint.md) - 子 Actor 文档
-- [BP_Section_中间组件.md](BP_Section_中间组件.md) - 墙段/柱段组件
+- [BP_Section_Wall.md](../结构组件/BP_Section_Wall.md) - 墙段组件（可吸附）
 - [场景组件.md](../场景组件.md) - 组件索引

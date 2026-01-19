@@ -94,6 +94,9 @@ BP_Puppet 监听事件 → 播放 Anim_Detect 蒙太奇
 - 检测逻辑仅在 DS 执行（HasAuthority 检查）
 - Client 的 Monitor 不执行检测，只是占位
 
-## 待实现
+---
 
-- [ ] 对玩家造成 34 点伤害（HP 归零 → 淘汰）
+## 相关文档
+
+- [BP_Puppet.md](BP_Puppet.md) - 木偶（表现层）
+- [场景组件.md](../场景组件.md) - 组件索引

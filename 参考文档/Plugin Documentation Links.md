@@ -274,3 +274,15 @@ FAB 集成后，Megascans 纹理工作流发生变化：
 - **动态灯光效果**：开关动画、闪烁、预热
 - **多人游戏**：内置网络复制支持
 
+---
+
+## Reactive Banners and Flags
+- **说明书**: [Reactive Banners and Flags 中文明档](./Plugins/Reactive Banners and Flags Documentation.md)
+- **用途**: 高性能、高度可定制的物理布料（旗帜、横幅）系统。
+- **核心功能**:
+    - **物理反馈**: 自动响应风力（Wind Directional Source）。
+    - **材质深度定制**: 支持腐蚀（Corrosion）、破损（Damage）、湿润（Wetness）等动态效果。
+    - **性能优化**: 可调节碰撞厚度、迭代次数及自碰撞开关。
+    - **自定义纹理**: 提供 UV 模板，支持通过外部图像编辑器创建自定义旗帜图案。
+- **UE 5.2 更新内容**: 优化了采样器使用，解决了 UE 5.2+ 材质采样器上限问题。
+

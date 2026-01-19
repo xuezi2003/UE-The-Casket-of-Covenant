@@ -71,13 +71,20 @@ BP_Item_Base (Actor)
 | **Replicates** | ✅ | 服务端销毁同步到客户端 |
 | **Net Load on Client** | ✅ | 客户端加载地图时创建（避免 ItemID 空值报错） |
 | **Replicate Movement** | ✅ | Flying 状态需要 |
-| **Net Update Frequency** | 100 | 网络更新频率 |
+| **Net Update Frequency** | 200 | 网络更新频率 |
+| **Min Net Update Frequency** | 100 | 最小更新频率（防止投掷物卡顿） |
 
 > [!NOTE]
 > **Net Load on Client** 仅对关卡中预放置的 Actor 有效。IA Scatter 运行时生成的 Actor 无需此选项，仅依赖 Replicates。
 
 > [!IMPORTANT]
 > **场景配置要求**：地面（Floor）等静态物体必须勾选「生成重叠事件」(Generate Overlap Events)，否则 InteractBox 的 Overlap 检测无法触发。
+
+### Actor 标签
+
+| 索引 | 标签名 | 用途 |
+|------|--------|------|
+| 0 | `Prop` | 供 IA Scatter 识别道具 |
 
 ---
 
@@ -88,6 +95,9 @@ BP_Item_Base (Actor)
 | ItemID | Data Table Row Handle | ✅ | None | ✅ | 核心数据源（RepNotify） |
 | ItemData | S_ItemData | ❌ | Structure | ❌ | 运行时缓存的数据 |
 | InitialState | E_ItemState | ❌ | InField | ✅ | 初始状态（GA_Throw 设为 Flying） |
+| BobHeight | Float | ❌ | 15.0 | ❌ | 浮动幅度 (cm) |
+| SpinTime | Float | ❌ | 3.0 | ❌ | 旋转一圈时间 (秒) |
+| BobTime | Float | ❌ | 1.5 | ❌ | 浮动一次时间 (秒) |
 
 ### E_ItemState 枚举
 
@@ -254,7 +264,27 @@ PropMesh.SetVisibility(false)
 DetectionBox.SetCollisionEnabled(QueryOnly)
 InteractBox.SetCollisionEnabled(QueryOnly)
 Bind Event to OnComponentBeginOverlap (InteractBox) → HandleInFieldOverlap
+
+# 旋转动画（FCTween Float）
+Tween Float Async Task (Start=0, End=360, Duration=SpinTime, Ease=Linear, Loops=-1)
+    → SET Task_Spin (保存任务引用)
+    → Apply Easing → IsValid(ContextItem)?
+        → True: Make Rotator(0, 0, Value) → ShowMesh.SetRelativeRotation
+        → False: [跳过]
+
+# 浮动动画（FCTween Float + Yoyo）
+Tween Float Async Task (Start=0, End=BobHeight, Duration=BobTime, Ease=InOutSine, Loops=-1, Yoyo=true)
+    → SET Task_Bob (保存任务引用)
+    → Apply Easing → IsValid(ContextItem)?
+        → True: ShowMesh.SetRelativeLocation(0, 0, Value)
+        → False: [跳过]
 ```
+
+> [!IMPORTANT]
+> **Tween 有效性检查**：由于 Tween 是异步任务，当道具被拾取销毁时，Tween 可能仍在运行。必须在每次更新前检查 `IsValid(ContextItem)` 避免访问已销毁的 Actor。
+
+> [!NOTE]
+> **浮动实现替代**：也可使用 `AddRelativeLocation` 并计算 Delta（当前 Value - 上一帧 Value），但 `SetRelativeLocation` 配合绝对位置更简单。
 
 **HandleInFieldOverlap**：
 ```
@@ -265,7 +295,9 @@ Cast OtherActor to BP_Character_Game
 
 **On State End**：
 ```
-InteractBox → Unbind All Events from OnComponentBeginOverlap
+Unbind All Events from OnComponentBeginOverlap (InteractBox)
+IsValid(Task_Bob) → Task_Bob.Stop()
+IsValid(Task_Spin) → Task_Spin.Stop()
 ```
 
 ### Flying 状态实现 ✅

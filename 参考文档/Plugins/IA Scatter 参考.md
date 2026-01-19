@@ -193,3 +193,9 @@
 | 变量 | 类型 | 说明 |
 |------|------|------|
 | `unlock number of instances / distance` | bool | 使用网格分布时，解锁实例数量和间距（location grid snap） |
+
+---
+
+## 项目实践
+
+- [IAScatter布局.md](../../关卡设计/01-耐力之匣/场景/IAScatter布局.md) - L_Endurance 关卡中的 IA Scatter 实例配置

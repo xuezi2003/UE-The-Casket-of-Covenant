@@ -48,18 +48,25 @@
 
 | 参数名 | 类型 | 说明 |
 |--------|------|------|
-| ForwardOffset | double | X 轴前移距离 |
-| TargetPos | Vector | 目标位置 |
+| ForwardDelta | double | Forward 方向前移距离 |
+| RightDelta | double | Right 方向平移量 |
+| UpDelta | double | Up 方向平移量 |
+| TargetPos | Vector | 最终目标位置（世界坐标） |
 
-### 逻辑（4 段链式 TweenVector）
+### 逻辑（4 段链式 TweenVector，使用本地坐标系）
 
-1. **前移**：当前位置 → 当前位置 + X 偏移
-2. **Y 平移**：移动到目标 Y 坐标
-3. **Z 平移**：移动到目标 Z 坐标
-4. **后移**：移动到最终目标位置
+| 段落 | Start | End |
+|------|-------|-----|
+| 1. 前移 | `GetActorLocation()` | `+ GetActorForwardVector() × ForwardDelta` |
+| 2. Right 平移 | `GetActorLocation()` | `+ GetActorRightVector() × RightDelta` |
+| 3. Up 平移 | `GetActorLocation()` | `+ GetActorUpVector() × UpDelta` |
+| 4. 后移 | `GetActorLocation()` | `TargetPos` |
 
 > [!NOTE]
-> 动画逻辑放在子 Actor 而非父 Actor，是为了解决 **蓝图自定义事件参数覆盖问题**：在同一蓝图中多次调用含 Latent 节点的事件时，参数会被后续调用覆盖。每个子 Actor 独立持有事件参数，互不干扰。
+> 动画逻辑放在子 Actor，避免蓝图 Latent 事件参数被后续调用覆盖。
+
+> [!TIP]
+> 使用本地坐标系（Forward/Right/Up）支持任意朝向。
 
 ---
 

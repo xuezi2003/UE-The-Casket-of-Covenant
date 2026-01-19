@@ -25,8 +25,17 @@ BP_TrajectoryDisplay (Actor)
 | Main Mesh | `SM_PT_Sphere_LowPoly` | 解决圆柱体背面剔除导致不可见的问题 |
 | Distance Between Dots | 24 | 小球间距 |
 | Path Scale | 2.0 | 小球缩放 |
-| Path Color | (0, 1, 0.88, 1) | 青绿色发光效果 |
+| Enable Custom Material | `True` | 使用自定义材质 |
+| Custom Material | `MI_Path` | 自定义非发光材质 |
 | Manual Edit Mode | `False` | 运行时动态刷新 |
+
+### MI_Path 材质配置
+
+| 属性 | 值 | 说明 |
+|------|-----|------|
+| 基础颜色 | `(0, 0.847, 1)` | 青色 |
+| 自发光 | 无 | 不发光 |
+| 不透明度 | `0.7` | 半透明 |
 
 ---
 

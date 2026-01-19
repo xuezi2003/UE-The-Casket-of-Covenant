@@ -104,3 +104,10 @@ Branch: Is Any Montage Playing? (防止重复触发)
     ↓
 (注意：蒙太奇回调中不再包含任何检测开关逻辑)
 ```
+
+---
+
+## 相关文档
+
+- [BP_Monitor.md](BP_Monitor.md) - 监视器（逻辑层）
+- [场景组件.md](../场景组件.md) - 组件索引

@@ -57,10 +57,13 @@
 |--------|------|------|------|
 | PS | PS_FiveBox | ❌ | 缓存的 PlayerState 引用 |
 | LevelCharacterComponentClass | Actor Component Class | ✅ | 关卡专属组件类（Spawn 时传入） |
-| LevelIMC | Input Mapping Context | ✅ | 关卡专属输入映射（Spawn 时传入） |
+| LevelIMC | Input Mapping Context | ✅ RepNotify | 关卡专属输入映射（Spawn 时传入，通过 OnRep 设置） |
 | LevelAbilitySet | GSCAbilitySet | ✅ | 关卡专属技能集（Spawn 时传入） |
 
-**复制说明**：GM 里动态设置的变量需要复制到客户端，因此 LevelCharacterComponentClass、LevelIMC、LevelAbilitySet 都设为 Replicated，在 InitPlayer 里统一初始化。
+**复制说明**：GM 里动态设置的变量需要复制到客户端，因此 LevelCharacterComponentClass、LevelIMC、LevelAbilitySet 都设为 Replicated。
+
+> [!IMPORTANT]
+> **LevelIMC 使用 RepNotify**：由于 Dedicated Server 模式下客户端接收 `LevelIMC` 的时序不确定，通过 `OnRep_LevelIMC` 确保在复制完成后设置 IMC，避免间歇性输入失效问题。
 
 **关卡专属配置架构**：
 - **LevelIMC**：每个关卡一个完整的 IMC（包含通用输入 + 关卡专属输入），不与 IMC_Core 组合
@@ -194,7 +197,6 @@ Sequence
 │
 ├─ then_2: 技能系统初始化
 │   ClearAbilitySet → GiveAbilitySet(LevelAbilitySet)
-│       → SET InputMappingContext = IMC_Endurance
 │       → SET ASC → HandleSpeedRateChanged
 │
 └─ then_3: 外观同步
@@ -205,9 +207,23 @@ Sequence
 > **组件创建必须只在服务端执行**：通过 `Switch Has Authority` 确保只有服务端调用 `Add Actor Component`。组件需启用 `Component Replicates`，引擎会自动复制到客户端。
 
 **关键点**：
-- LevelIMC 设置到 GSCAbilityInputBinding 组件的 InputMappingContext 属性
 - LevelAbilitySet 通过 GiveAbilitySet 赋予，同时建立输入绑定
 - 组件添加仅服务端执行，复制系统负责同步到客户端
+- **LevelIMC 在 OnRep_LevelIMC 中设置**（见下方）
+
+### OnRep_LevelIMC（IMC 设置）
+
+```
+OnRep_LevelIMC
+→ IsLocallyControlled?
+    → True: SET GSCAbilityInputBinding.InputMappingContext = LevelIMC
+    → False: [End]
+```
+
+**设计原因**：
+- 在 Dedicated Server 模式下，客户端的 `LevelIMC` 通过复制获取
+- 复制时序与 `InitPlayer` 调用时序存在竞争，可能导致 IMC 为空
+- 使用 `RepNotify` 确保在 `LevelIMC` 复制完成后设置，彻底解决间歇性输入失效问题
 
 ### HandleSpeedRateChanged / InitSpeed 逻辑
 
