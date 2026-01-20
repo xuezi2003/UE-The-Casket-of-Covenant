@@ -4,6 +4,8 @@
 
 **父类**：Actor
 
+**实现状态**：✅ 已实现（视线检测逻辑） | ⏳ 伤害逻辑待 Phase 6
+
 ## 设计理念
 
 木偶（BP_Puppet）与监视器（BP_Monitor）分离：
@@ -22,9 +24,9 @@ BP_Monitor 是横跨场地的 Box Collision，与场地等宽。
 
 | 变量名 | 类型 | 复制 | 说明 |
 |--------|------|------|------|
-| bIsDetecting | 布尔 | - | 当前是否检测中（从 GS 同步） |
+| IsDetecting | 布尔 | - | 当前是否检测中（从 GS 同步） |
 | CheckInterval | 浮点 | - | 检测间隔（秒），默认 0.1 |
-| HeadSocketName | Name | - | 头部骨骼名称 |
+| DetectSocketName | Name | - | 检测用骨骼名称（头部） |
 
 ## 视线检测逻辑
 
@@ -34,24 +36,27 @@ BP_Monitor 是横跨场地的 Box Collision，与场地等宽。
 ```
 GS.IsDetecting = true（木偶转身完成后触发）
     ↓
-Monitor 启动定时检测（CheckInterval 间隔）
+Monitor 启动定时检测
     ↓
-获取所有玩家（通过 GameState.PlayerArray）
+遍历 GameState.PlayerArray
     ↓
-对每个玩家执行 Line Trace
-    ├─ 起点：玩家头部骨骼位置
-    └─ 方向：固定 +X（世界坐标）
+对每个玩家执行 DetectSinglePlayer
+    ├─ 起点：玩家 Mesh.GetSocketLocation(DetectSocketName)
+    └─ 方向：固定 +X（世界坐标，延伸 100000 单位）
     ↓
 判断射线结果
     ├─ 命中 BP_Monitor → 无遮挡 → 检查 Danger 标签
-    │   ├─ 有 Danger 标签 → 造成 34 点伤害
+    │   ├─ 有 Danger 标签 → Multicast_PlayerDetected（⏳ 伤害待实现）
     │   └─ 无 Danger 标签 → 安全
     └─ 命中障碍物/其他玩家 → 有遮挡 → 安全
 ```
 
 **遮挡机制**：
 - 障碍物遮挡：射线被场景物体阻挡
-- 玩家互相遮挡：射线先命中其他玩家
+- 玩家互相遮挡：射线先命中其他玩家的 **CharacterMesh**（不是胶囊体）
+
+> [!NOTE]
+> 遮挡检测由 CharacterMesh 而非胶囊体负责，蹲行时 Mesh 会跟随动画变矮，自然改变遮挡效果。详见 [碰撞预设配置.md](../../00-通用逻辑/碰撞预设配置.md)。
 
 **Line Trace 配置**：
 - Channel：**PuppetVision**（自定义 Trace Channel，默认 Block）
@@ -63,16 +68,60 @@ Monitor 启动定时检测（CheckInterval 间隔）
 - 玩家可以互相遮挡（躲在其他玩家后面不会被检测）
 - 障碍物也会遮挡视线
 
-## 事件监听
+## 函数结构
 
-**检测开关**：
+### BeginPlay ✅
+
 ```
-GS_Endurance.OnDetectionChange
+Event BeginPlay
     ↓
-BP_Monitor 监听
+Cast GetGameState() To GS_Endurance
     ↓
-IsDetecting = true → 启动检测定时器
-IsDetecting = false → 停止检测定时器
+Bind Event to OnDetectingChanged → HandleDetectChange
+```
+
+### HandleDetectChange ✅
+
+```
+HandleDetectChange (IsDetecting: Bool)
+    ↓
+Switch Has Authority
+    └─ Authority:
+        SET IsDetecting
+        ↓
+        Branch (IsDetecting)
+            ├─ True → Set Timer (DoLineTraceCheck, Time=CheckInterval, Looping=true)
+            └─ False → Clear Timer (DoLineTraceCheck)
+```
+
+### DoLineTraceCheck ✅
+
+```
+DoLineTraceCheck
+    ↓
+Switch Has Authority
+    └─ Authority:
+        For Each in PlayerArray
+            → DetectSinglePlayer(PS)
+```
+
+### DetectSinglePlayer ✅
+
+```
+DetectSinglePlayer (PS: PlayerState)
+    ↓
+Cast PS.GetPawn() to BP_Character_Game
+    ↓
+If Character.HasGameplayTag(Player.State.Danger):   ← 先检查 Danger Tag
+    ├─ False → 返回（静止玩家跳过）
+    └─ True ↓
+        Line Trace By Channel (PuppetVision)
+            ├─ Start: Mesh.GetSocketLocation(DetectSocketName)
+            ├─ End: Start + (100000, 0, 0)
+            └─ ActorsToIgnore: [Character]
+            ↓
+        If Hit && HitActor is BP_Monitor:
+            → GS.Multicast_PlayerDetected(Character)
 ```
 
 ## 伤害触发流程
@@ -86,7 +135,7 @@ GS 广播 OnPlayerDetected 事件
     ↓
 BP_Puppet 监听事件 → 播放 Anim_Detect 蒙太奇
     ↓
-对玩家造成 34 点伤害（HP 归零 → 淘汰）
+对玩家造成 34 点伤害（❌ Phase 6 待实现）
 ```
 
 ## 网络说明
@@ -100,3 +149,4 @@ BP_Puppet 监听事件 → 播放 Anim_Detect 蒙太奇
 
 - [BP_Puppet.md](BP_Puppet.md) - 木偶（表现层）
 - [场景组件.md](../场景组件.md) - 组件索引
+- [碰撞预设配置.md](../../00-通用逻辑/碰撞预设配置.md) - PuppetVision 通道配置

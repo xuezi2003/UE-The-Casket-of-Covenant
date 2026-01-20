@@ -27,8 +27,11 @@ BP_Item_Base (Actor)
 |------|----------|
 | **ShowMesh** | 默认可见；无碰撞（检测由 Box 负责） |
 | **PropMesh** | Hidden in Game = false；通过 Set Visibility 控制显隐；无碰撞 |
-| **DetectionBox** | Collision Profile = OverlapOnlyPawn；Radius = 200 |
-| **InteractBox** | Collision Profile = OverlapOnlyPawn；Radius = 50 |
+| **DetectionBox** | Collision Profile = OverlapAllDynamic；Radius = 200 |
+| **InteractBox** | Collision Profile = OverlapAllDynamic；Radius = 50 |
+
+> [!NOTE]
+> **OverlapAllDynamic 预设需修改**：需对 `PawnBlock` 和 `PuppetVision` 通道响应 Overlap，详见 [BP_StartLine.md](../场景/功能组件/BP_StartLine.md)。
 | **StateMachineComponent** | 见下方详细配置 |
 
 ### StateMachineComponent 配置 ✅

@@ -4,7 +4,7 @@
 
 **父类**：Actor
 
-**实现状态**：✅ 已实现（红绿灯切换）/ ⏳ 待实现（Detect 视频，需 BP_Monitor）
+**实现状态**：✅ 已实现
 
 **摆放方式**：MSS 吸附到 BP_Section_End
 
@@ -30,41 +30,80 @@ BP_VideoBoard
 |--------|------|------|
 | `MediaPlayer` | Media Player* | 指向 MP_VideoBoard |
 | `VideoSourceMap` | Map\<E_VideoType, MediaSource\> | 视频类型映射 |
+| `CurrentVideoType` | E_VideoType | 当前播放的视频类型 |
+| `IsRedLight` | Bool | 缓存的红绿灯状态（恢复用） |
 
 ---
 
 ## 视频场景
 
-| 场景 | 触发时机 | 状态 |
+| 场景 | 触发时机 | 循环 |
 |------|----------|:----:|
-| 绿灯 | GS.IsRedLight = false | ✅ |
-| 红灯 | GS.IsRedLight = true | ✅ |
-| 被检测 | 玩家被 BP_Monitor 检测到 | ⏳ |
+| GreenLight | GS.IsRedLight = false | ✅ 循环 |
+| RedLight | GS.IsRedLight = true | ✅ 循环 |
+| HasDetect | 玩家被 BP_Monitor 检测到 | ❌ 单次 |
 
 ---
 
-## 事件绑定（BeginPlay）
+## 函数结构
+
+### BeginPlay ✅
 
 ```
 Event BeginPlay
-→ Cast(GetGameState()) To GS_Endurance
-→ Bind Delegate(HandleRedLightChange) to OnIsRedLightChange
+    ↓
+Cast GetGameState() To GS_Endurance
+    ↓
+Bind Event to OnRedLightChanged → HandleRedLightChange
+Bind Event to OnPlayerDetected → HandlePlayerDetected
+    ↓
+PlayVideo(GreenLight)  ← 初始播放绿灯视频
+    ↓
+Bind Event to MediaPlayer.OnEndReached → HandleMPReachEnd
 ```
 
-## 事件处理（HandleRedLightChange）
+### HandleRedLightChange ✅
 
 ```
-Custom Event: HandleRedLightChange (IsRedLight: Bool)
-→ PlayVideo(Select(IsRedLight, Red, Green))
+HandleRedLightChange (IsRedLight: Bool)
+    ↓
+SET IsRedLight = IsRedLight  ← 缓存状态
+    ↓
+Branch (CurrentVideoType != HasDetect)
+    ├─ True → PlayVideo(Select(IsRedLight, RedLight, GreenLight))
+    └─ False → 跳过（不打断 Detect 视频）
 ```
 
-## 函数：PlayVideo
+### HandlePlayerDetected ✅
 
 ```
-PlayVideo(VideoType: E_VideoType)
-→ If VideoSourceMap.Find(VideoType) IsValid
-   → MediaPlayer.OpenSource(VideoSourceMap[VideoType])
-   → MediaPlayer.Play()
+HandlePlayerDetected (DetectedPlayer)
+    ↓
+PlayVideo(HasDetect)
+```
+
+### HandleMPReachEnd ✅
+
+```
+HandleMPReachEnd
+    ↓
+Branch (CurrentVideoType == HasDetect)
+    ├─ True → PlayVideo(Select(IsRedLight, RedLight, GreenLight))
+    └─ False → 不处理（循环视频不触发）
+```
+
+### PlayVideo ✅
+
+```
+PlayVideo (VideoType: E_VideoType)
+    ↓
+SET CurrentVideoType = VideoType
+    ↓
+If VideoSourceMap.Find(VideoType) IsValid:
+    ↓
+    MediaPlayer.OpenSource(VideoSourceMap[VideoType])
+    MediaPlayer.SetLooping(CurrentVideoType != HasDetect)  ← Detect 不循环
+    MediaPlayer.Play()
 ```
 
 ---
@@ -74,6 +113,26 @@ PlayVideo(VideoType: E_VideoType)
 - **不需要复制**：BP_VideoBoard 是纯表现层组件
 - **事件源已同步**：`GS_Endurance.IsRedLight` 是 RepNotify 变量
 - **执行流程**：Server 修改 IsRedLight → 复制到客户端 → 触发 OnRep → 广播事件 → 各客户端本地 PlayVideo
+
+---
+
+## 插件依赖
+
+> [!IMPORTANT]
+> **必须启用 Electra 插件**以避免 MediaPlayer 循环播放卡顿！
+> - Edit → Plugins → 启用 **Electra Player** 和 **Electra Codecs**
+> - 重启引擎后生效
+
+---
+
+## 已知问题
+
+> [!NOTE]
+> **视频切换有约 1 秒延迟**：`OpenSource()` 是异步的，视频需要加载解码才能显示。
+> 
+> **已尝试方案**：FileMediaSource 的 Precache File 选项（无效）
+> 
+> **潜在解决方案**：使用多个 MediaPlayer 实例预加载所有视频，切换时只切换 MediaTexture 输入源。
 
 ---
 

@@ -19,16 +19,16 @@
 
 | 事件 | 参数 | 说明 |
 |------|------|------|
-| OnIsRedLightChange | IsRedLight: Bool | 红绿灯状态变化时广播 |
-| OnDetectionChange | IsDetecting: Bool | 检测状态变化时广播 |
-| OnPlayerDetected | Player: BP_Character_Game | 玩家被检测到时广播（触发木偶动画） |
+| OnRedLightChanged | IsRedLight: Bool | 红绿灯状态变化时广播 |
+| OnDetectingChanged | IsDetecting: Bool | 检测状态变化时广播 |
+| OnPlayerDetected | DetectedPlayer: BP_Character_Game | 玩家被检测到时广播（触发木偶动画） |
 
 ## 函数
 
 | 函数 | 权限 | 说明 |
 |------|------|------|
-| OnRep_IsRedLight | - | RepNotify 回调，调用 OnIsRedLightChange 广播 |
-| OnRep_IsDetecting | - | RepNotify 回调，调用 OnDetectionChange 广播 |
+| OnRep_IsRedLight | - | RepNotify 回调，调用 OnRedLightChanged 广播 |
+| OnRep_IsDetecting | - | RepNotify 回调，调用 OnDetectingChanged 广播 |
 | Server_SetDetecting | Server | 设置 IsDetecting（由 BP_Puppet 的 HandleIsRedLightChange 调用） |
 | Multicast_PlayerDetected | Multicast | 广播 OnPlayerDetected（由 Monitor 调用，所有端执行） |
 

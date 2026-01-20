@@ -20,10 +20,7 @@
 
 ### CharMoveComp 关键设置
 
-> [!WARNING]
-> **网络平滑模式必须禁用**：为了确保蹲行时 Mesh 位置在 Simulated Proxy 上正确显示，必须将 **网络平滑模式** 设为 **禁用**。
->
-> 原因：Simulated Proxy 上的网络平滑会每帧将 Mesh 位置"校正"回默认值，覆盖 HandleCrouch 中 Timeline 设置的位置。
+网络平滑模式保持默认设置即可。
 
 ### CharacterMesh0 关键设置
 
@@ -127,22 +124,15 @@ SpeedRate → 调用 HandleSpeedRateChanged
 
 ## GASGraph（标签变化监听）
 
-**用途**：监听 Gameplay Tag 变化，触发本地表现逻辑（如胶囊体高度变化）。
+**用途**：监听 Gameplay Tag 变化，触发本地表现逻辑。
 
 ### On Gameplay Tag Change 流程
 
-```
-On Gameplay Tag Change (GSCCore)
-    ↓
-Switch on Gameplay Tag
-    ↓
-Player.Action.Crouching → HandleCrouch (NeedHalf = New Tag Count > 0)
-```
+当前未监听 Crouching 标签（蹲行不修改胶囊体高度）。
 
 **说明**：
 - GE 复制会自动同步标签到所有客户端
 - 每个客户端本地监听标签变化，执行对应的表现逻辑
-- 这样避免了 Timeline Replicated 导致的同步问题
 
 ## LocoGraph（输入处理）
 
@@ -180,7 +170,6 @@ Y Axis → Add Controller Pitch Input (Up/Down)
 | UpdatePlayerAvatar | 更新外观 |
 | InitPlayer | 初始化：绑定事件 + 同步外观/编号 |
 | InitSpeed | 初始化时设置速度（后续由 BAS_Core 更新） |
-| HandleCrouch | 蹲行胶囊体高度变化（Timeline 平滑过渡） |
 
 ### InitPlayer 流程
 
@@ -248,3 +237,5 @@ OnRep_LevelIMC
 - [外观加载.md](../外观加载.md)
 - [输入系统.md](../输入系统.md)
 - [属性系统.md](../属性系统.md)
+- [碰撞预设配置.md](../碰撞预设配置.md) - Pawn/CharacterMesh 碰撞配置
+

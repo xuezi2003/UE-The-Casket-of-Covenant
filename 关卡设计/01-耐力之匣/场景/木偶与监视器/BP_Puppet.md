@@ -9,7 +9,7 @@
 BP_Puppet 是场景中放置的 Actor，DS 和 Client 各自有独立实例，不自动同步。
 
 **同步策略**：通过 GS_Endurance 广播驱动
-- BP_Puppet 监听 GS_Endurance 的 `IsRedLight` 变化
+- BP_Puppet 监听 GS_Endurance 的 `OnRedLightChanged` 和 `OnPlayerDetected` 事件
 - 各端的 BP_Puppet 各自响应，播放相同动画
 - 不需要 BP_Puppet 本身做网络复制
 
@@ -27,36 +27,41 @@ BP_Puppet 是场景中放置的 Actor，DS 和 Client 各自有独立实例，�
 
 | 变量名 | 类型 | 说明 |
 |--------|------|------|
-| bIsFacing | 布尔 | 是否面对玩家（驱动动画蓝图） |
-| GS_Ref | GS_Endurance | GS 引用缓存 |
+| IsFacing | 布尔 | 是否面对玩家（驱动动画蓝图） |
+| TurnAnimSeq | Animation Sequence | 转身动画序列引用（用于获取 SequenceLength） |
 
 ## 检测开关逻辑
 
+### BeginPlay ✅
+
+```
+Event BeginPlay
+    ↓
+Cast GetGameState() To GS_Endurance
+    ↓
+Bind Event to OnRedLightChanged → HandleIsRedLightChange
+Bind Event to OnPlayerDetected → HandlePlayerDetected
+```
+
+### HandleIsRedLightChange ✅
+
 检测开关在 **`HandleIsRedLightChange`** 中手动延时触发（仅 DS 执行）。
 
-**逻辑流程**：
 ```
 HandleIsRedLightChange (IsRedLight)
     ↓
-SET bIsFacing = IsRedLight
+SET IsFacing = IsRedLight
     ↓
 Switch Has Authority
-    ├─ Authority
-    │   ├─ Is Facing? (True/红灯)
-    │   │   ↓
-    │   │   Delay (TurnAnimDuration) → 等待转身动画播放完毕
-    │   │   ↓
-    │   │   GS.Server_SetDetecting(true)
-    │   │
-    │   └─ Not Is Facing (False/绿灯)
-    │       ↓
-    │       GS.Server_SetDetecting(false) → 立即关闭检测
-    │
-    └─ Remote → 不执行
+    └─ Authority:
+        Branch (IsRedLight)
+            ├─ True（红灯）:
+            │   Delay (TurnAnimSeq.SequenceLength)
+            │   → GS.Server_SetDetecting(IsFacing)
+            │
+            └─ False（绿灯）:
+                → GS.Server_SetDetecting(IsFacing) → 立即关闭检测
 ```
-
-**关键变量**：
-- `TurnAnimDuration` (Float): 转身动画时长（秒），可从动画序列获取 Sequence Length。
 
 ## 动画资源
 

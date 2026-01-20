@@ -103,3 +103,4 @@ Cast to Character
 - [BP_StartLine.md](BP_StartLine.md) - 起点线触发器
 - [BP_Section_End.md](../结构组件/BP_Section_End.md) - 终点封闭墙
 - [BP_Monitor.md](../木偶与监视器/BP_Monitor.md) - 监视器
+- [碰撞预设配置.md](../../00-通用逻辑/碰撞预设配置.md) - Pawn/PawnBlock 通道配置

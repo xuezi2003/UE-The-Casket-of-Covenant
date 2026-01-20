@@ -29,6 +29,11 @@
 2. 穿过 StartLine（EndOverlap）后切换为 `PawnBlock`
 3. 返回时被 StartLine Block，无法返回出生点
 
+> [!IMPORTANT]
+> **系统预设修改**：`OverlapAllDynamic` Profile 需要修改：
+> - 对 `PawnBlock` 响应 Overlap（道具检测框可检测穿过 StartLine 的玩家）
+> - 对 `PuppetVision` 响应 Overlap（Monitor 检测时不被意外阻挡）
+
 ---
 
 ## 组件结构
@@ -101,3 +106,5 @@ Cast to Character
 - [BP_FinishLine.md](BP_FinishLine.md) - 终点线触发器
 - [BP_Section_Start.md](../结构组件/BP_Section_Start.md) - 起点封闭墙
 - [场景组件.md](../场景组件.md) - 组件索引
+- [碰撞预设配置.md](../../00-通用逻辑/碰撞预设配置.md) - PawnBlock 通道配置
+
