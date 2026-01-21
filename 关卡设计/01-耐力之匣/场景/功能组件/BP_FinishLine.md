@@ -73,14 +73,27 @@ TriggerBox.SetVisibility(IsDebug, PropagateToChildren=true)
 
 **执行条件**：Server + Client 都执行
 
-当玩家离开触发区域时：
+当玩家离开触发区域时，通过方向检查确保是“向终点区”离开：
+
+```blueprint
 ```blueprint
 Cast to Character
-  → CapsuleComponent.SetCollisionObjectType(Pawn)
-  → Add 'Finished' Tag（❌ 待实现：Server Only）
-  → Notify GameState Finished（❌ 待实现）
-  → PrintText（调试用）
+  → [CheckHasThrough]（自定义函数：执行点积判定）
+      ├─ True (点积 > 0，确认进入终点区) ↓
+      │   → CapsuleComponent.SetCollisionObjectType(Pawn)  ✅ 已实现
+      │   → SendGameplayEventToActor(Character, Gameplay.Event.Player.Finished)  ✅ 已实现
+      │   → ASC.BP_ApplyGameplayEffectToSelf(GE_Finished)  ✅ 已实现
+      │   → PrintText（调试用）
+      └─ False (说明向赛道退回，不做处理)
 ```
+```
+
+### CheckHasThrough 函数实现
+计算玩家相对于 FinishLine 的离开矢量，并与 FinishLine 的 Forward Vector 进行点积：
+- **A**: `CharacterLocation - FinishLineLocation`
+- **B**: `FinishLine.GetActorForwardVector`
+- **Return**: `Dot(A, B) > 0`
+
 
 ---
 

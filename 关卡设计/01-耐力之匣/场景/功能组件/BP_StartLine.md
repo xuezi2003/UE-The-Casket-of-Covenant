@@ -72,15 +72,26 @@ TriggerBox.SetVisibility(IsDebug, PropagateToChildren=true)
 
 **执行条件**：Server + Client 都执行
 
-当玩家离开触发区域时：
+当玩家离开触发区域时，通过方向检查确保是“向赛道内”离开：
+
 ```blueprint
 Cast to Character
-  → CapsuleComponent.SetCollisionObjectType(PawnBlock)
-  → GrantAbilities（❌ 待实现：Server Only）
-  → Remove 'AtStart' Tag（❌ 待实现：Server Only）
-  → Notify GameState（❌ 待实现）
-  → PrintText（调试用）
+  → [CheckHasThrough]（自定义函数：执行点积判定）
+      ├─ True (点积 > 0，确认向赛道离开) ↓
+      │   → CapsuleComponent.SetCollisionObjectType(PawnBlock)
+      │   → GrantAbilities（❌ 待实现：Server Only）
+      │   → Remove 'AtStart' Tag（❌ 待实现：Server Only）
+      │   → Notify GameState（❌ 待实现）
+      │   → PrintText（调试用）
+      └─ False (说明向出生点退回，不做处理)
 ```
+
+### CheckHasThrough 函数实现
+计算玩家相对于 StartLine 的离开矢量，并与 StartLine 的 Forward Vector 进行点积：
+- **A**: `CharacterLocation - StartLineLocation`
+- **B**: `StartLine.GetActorForwardVector`
+- **Return**: `Dot(A, B) > 0`
+
 
 > [!NOTE]
 > Collision Object Type 不会自动复制，需要 Server + Client 都执行碰撞切换。

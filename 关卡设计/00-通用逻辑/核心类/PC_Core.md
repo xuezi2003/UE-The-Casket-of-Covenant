@@ -11,27 +11,73 @@
 
 ## 关键事件
 
-### Event OnPossess
+### Event OnPossess ✅ 已更新
 
-动态添加关卡专属组件：
+动态添加关卡专属组件 + 监听淘汰/完成事件：
 
+```blueprint
+Event ReceivePossess (PossessedPawn)
+    ↓
+Call Parent: ReceivePossess
+    ↓
+Switch Has Authority → Authority:
+    ↓
+Sequence
+    ├─ then_0: [原有逻辑] 添加关卡组件
+    │   Cast GetGameMode() to GM_Core
+    │       → If IsValidClass(LevelPCComponentClass)
+    │           → AddComponentByClass
+    │               → SetIsReplicated(true)
+    │                   → SET LevelPCComp
+    │
+    └─ then_1: [新增] 监听 Gameplay 事件
+        AsyncAction: 等待 Gameplay 事件到 Actor (Eliminated)
+            → HandlePlayerEliminate()
+        AsyncAction: 等待 Gameplay 事件到 Actor (Finished)
+            → HandlePlayerFinish()
 ```
-Event OnPossess (Pawn)
+
+### HandlePlayerEliminate（Custom Event）✅ 已实现
+
+```blueprint
+Event HandlePlayerEliminate
     ↓
-Has Authority?
-    ↓ True
-Get Game Mode → Cast to GM_Core → Get LevelPCComponentClass
+UnPossess()
     ↓
-Is Valid?
-    ↓ True
-Add Actor Component (LevelPCComponentClass)
+BPL_Game_Core.GetGIFiveBox().CheckIsHuman(PlayerNum)
     ↓
-组件启用 Component Replicates → 自动复制到客户端
+If (IsHuman)
+    ├─ True → PrintText ("【PC_Core】玩家已淘汰，应返回主菜单")
+    └─ False → [结束]
 ```
+
+### HandlePlayerFinish（Custom Event）✅ 已实现
+
+```blueprint
+Event HandlePlayerFinish
+    ↓
+BPL_Game_Core.GetGIFiveBox().SetPlayerFinished(PlayerNum)
+    ↓
+GetGameState(GS_Core).CheckLevelShouldEnd()
+```
+
+> [!WARNING]
+> **待实现：真人玩家返回主菜单**
+> 
+> 当前 `PrintText` 为占位符，后续需替换为：
+> ```blueprint
+> Open Level (by Name)
+>     └─ Level Name: "MainMenu"
+> ```
+> 
+> **注意**：
+> - 开启无缝切换不影响单个玩家的 `Open Level`
+> - `Open Level` 会触发非无缝切换，彻底重置玩家状态
 
 **设计说明**：
 - 组件仅在服务端添加，通过复制系统同步到客户端
 - 具体组件类由 GM 子类配置（如 GM_Endurance 配置 Comp_PC_Endurance）
+- 淘汰处理在服务端执行
 
 ## 输入处理
 

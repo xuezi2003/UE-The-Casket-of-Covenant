@@ -19,7 +19,7 @@ BP_Section_End
         ├── 材质: MI_Wall
         │
         └── SM_Pivot (StaticMesh)
-            └── 用于 MSS 吸附挂载 BP_VideoBoard
+            └── 预留挂载点
 ```
 
 ---
@@ -28,7 +28,7 @@ BP_Section_End
 
 | 组件 | 摆放方式 |
 |------|----------|
-| [BP_VideoBoard](../功能组件/BP_VideoBoard.md) | MSS 吸附 |
+| - | - |
 | [BP_FinishLine](../功能组件/BP_FinishLine.md) | 手动摆放 |
 
 ---

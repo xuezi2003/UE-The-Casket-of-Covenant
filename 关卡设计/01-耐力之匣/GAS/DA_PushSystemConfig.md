@@ -41,6 +41,13 @@
 | GE | GE_StaminaCost, GE_Dodging |
 | SetByCaller | Effect.Cost.Stamina = -20 |
 
+### AttackEffectContainer
+| 配置 | 值 |
+|------|-----|
+| Target Type | GSCTargetTypeUseOwner |
+| GE | `GE_Damage_Detect`, `GE_Attack`, `GE_StopMove` |
+| SetByCaller | Effect.Cost.Health = -34 |
+
 ---
 
 ## GA 参数
@@ -86,4 +93,5 @@ ConfigAsset.PointSpeed
 ## 相关文档
 
 - [推搡系统.md](推搡系统.md)
+- [伤害系统.md](伤害系统.md)
 - [WBP_Endurance_QTE_Stagger.md](../UI/WBP_Endurance_QTE_Stagger.md)

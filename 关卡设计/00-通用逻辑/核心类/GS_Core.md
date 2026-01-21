@@ -62,11 +62,26 @@
 
 ## 关键逻辑
 
-| 事件/函数 | 说明 |
-|-----------|------|
-| Event BeginPlay | 仅服务端：确保 MainSM 启动（如果未自动启动） |
-| OnRep_ActiveMatchPhase | 复制时广播事件通知客户端 |
-| OnRep_ActiveMatchStatus | 复制时广播事件通知客户端 |
+| 事件/函数 | 说明 | 权限 |
+|-----------|------|------|
+| Event BeginPlay | 仅服务端：确保 MainSM 启动（如果未自动启动） | Server |
+| CheckLevelShouldEnd | 调用 `GI.CheckLevelEndCondition`，为真则广播 `OnLevelShouldEnd` | Server |
+| OnRep_ActiveMatchPhase | 复制时广播事件通知客户端 | Client |
+| OnRep_ActiveMatchStatus | 复制时广播事件通知客户端 | Client |
+
+### CheckLevelShouldEnd ✅ 已实现
+
+**说明**：检查关卡结束条件（基于 PlayerRecords 的通用逻辑）。
+
+```blueprint
+Function CheckLevelShouldEnd
+    ↓
+Get GI_FiveBox -> Call CheckLevelEndCondition()
+    ↓
+If (ShouldEnd == True)
+    Call OnLevelShouldEnd.Broadcast()
+```
+
 
 ## 设计说明
 
