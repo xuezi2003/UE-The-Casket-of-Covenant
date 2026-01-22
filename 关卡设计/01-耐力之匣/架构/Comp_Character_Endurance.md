@@ -114,31 +114,55 @@ Has Matching Gameplay Tag (Player.State.Exhausted)?
 - 退出力竭：Stamina ≥ 15（ExhaustedThreshold）
 - 好处：防止体力在阈值边缘反复触发力竭状态
 
-### HandleHealthChanged（函数）✅ Phase 6
+### HandleHealthChanged（函数）✅ 已实现
 
-**说明**：HP 归零时执行完整的淘汰流程。
+**说明**：HP 归零时执行完整的死亡与淘汰流程。
+
+**执行流程**：
 
 ```blueprint
 If (GetFloatAttribute(BAS_Core.Health) <= 0 AND NOT ASC.HasMatchingGameplayTag(Player.State.Dead))
     ↓ True
+    【步骤 1】应用死亡标签
     ASC.BP_ApplyGameplayEffectToSelf (GE_Dead)
         ↓
     Switch Has Authority → Authority:
         ↓
+    【步骤 2】范围检测（死亡广播）
     SphereTraceMulti (Channel: PuppetVision, Radius: DeathEffectRadius, IgnoreSelf)
         ↓
-    Sequence
-        ├─ then_0: [步骤 2 死亡广播] ✅ 已实现
+    Sequence（并行执行两个分支）
+        ├─ then_0: 【步骤 3】死亡广播 - 周围玩家失衡
         │   For Each in OutHits:
         │       Cast HitActor to Character
         │           → SendGameplayEventToActor (Gameplay.Event.Activate.Stagger)
         │
-        └─ then_1: [步骤 3-7 淘汰处理链] ✅ 已实现
-            SetPlayerEliminate()
-                → SpawnDeadCoin()
-                    → Multicast_OnDeath()
-                        → SendGameplayEventToActor (BP_Character, Gameplay.Event.Player.Eliminated)
+        └─ then_1: 淘汰处理链（顺序执行）
+            ├─ 【步骤 4】记录淘汰状态
+            │   SetPlayerEliminate()
+            │       → GI_FiveBox.SetPlayerEliminated(PlayerNum)
+            │
+            ├─ 【步骤 5】掉落金币
+            │   SpawnDeadCoin()
+            │       → For Loop: Spawn BP_Item_Coin (数量 = Coin 属性值)
+            │
+            ├─ 【步骤 6】死亡表现（所有端执行）
+            │   Multicast_OnDeath()
+            │       ├─ CapsuleComponent.SetCollisionEnabled(无碰撞)
+            │       ├─ Mesh.SetSimulatePhysics(true) ← Ragdoll
+            │       └─ CharacterMovement.DisableMovement()
+            │
+            └─ 【步骤 7】发送淘汰事件（触发 PC_Core 后续处理）
+                SendGameplayEventToActor (BP_Character, Gameplay.Event.Player.Eliminated)
+                    → PC_Core.HandlePlayerEliminate (监听此事件)
+                        ├─ UnPossess() ✅
+                        └─ 真人玩家返回主菜单 ⚠️ 待实现
 ```
+
+**设计说明**：
+- 步骤 1-7 在 `Comp_Character_Endurance` 中完整实现
+- 步骤 7 发送的淘汰事件由 `PC_Core.HandlePlayerEliminate` 监听处理
+- 关卡结束检查不在淘汰流程中触发，而是由玩家完成事件触发（详见 [PC_Core.md](../../00-通用逻辑/核心类/PC_Core.md)）
 
 ### SetPlayerEliminate（函数）✅ 已实现
 
@@ -178,27 +202,12 @@ BP_Character.Mesh.SetSimulatePhysics (true)
 BP_Character.CharacterMovement.DisableMovement()
 ```
 
+**设计说明**：
+- 在所有端执行（Multicast），确保死亡表现同步
+- Ragdoll 效果由 `SetSimulatePhysics(true)` 实现
+- 禁用碰撞避免死亡后仍然阻挡其他玩家
 
-**后续步骤（待实现）**：
-
-```
-[步骤 7] Unpossess  ❌ 待实现
-    GetController → Cast to PC_Core → UnPossess
-
-[步骤 8] 返回界面 (仅真人)  ❌ 待实现
-    PS_FiveBox.IsHuman?
-        ├─ True → PC_Core.ClientTravel(MainMenuURL)
-        └─ False → (AI 无需处理)
-
-[步骤 9] 检查关卡结束条件  ❌ 待实现
-    GS_Endurance.CheckLevelEndCondition()
-```
-
-**变量**：
-| 变量名 | 类型 | 默认值 | 说明 |
-|--------|------|--------|------|
-| DeathEffectRadius | Float | 500.0 | 死亡广播范围（厘米）|
-| MainMenuURL | String | - | 主菜单关卡路径 ❌ 待配置 |
+---
 
 ### UpdateMoving（Tick 调用，仅服务端）
 
@@ -227,6 +236,7 @@ Is Valid (ASC)
 | ThrowItemID | DataTableRowHandle | ✅ RepNotify | 当前持有的投掷道具 ID |
 | ThrowItemData | S_ItemData | ❌ | 缓存的道具数据（由 OnRep 查表填充） |
 | PropInHandComp | StaticMeshComponent | ❌ | 手持道具组件引用 |
+| DeathEffectRadius | Float | ❌ | 死亡广播范围（厘米），默认 500.0 |
 
 ### 新增函数
 
@@ -292,21 +302,9 @@ SET PropInHandComp = None
 
 ---
 
-## Phase 6 待办
-
-- [x] 监听 `BAS_Core.Health` 属性变化
-- [x] `HandleHealthChanged` 函数：HP 归零时触发死亡处理
-- [x] 死亡广播：周围玩家失衡（SendGameplayEvent）
-- [ ] **步骤 3**: 记录淘汰状态（调用 `GI_FiveBox.SetPlayerEliminated`）
-- [ ] **步骤 4**: 掉落金币（Spawn BP_Item_Coin）
-- [ ] **步骤 5-6**: 禁用碰撞 + 死亡动画（`Multicast_OnDeath`）
-- [ ] **步骤 7-8**: Unpossess + 真人玩家返回界面
-- [ ] **步骤 9**: 检查关卡结束条件（调用 `GS_Endurance.CheckLevelEndCondition`）
-
----
-
 ## 相关文档
 
 - [伤害系统.md](../GAS/伤害系统.md) - GA_Attacked / GE_Damage_Detect
 - [体力系统.md](../GAS/体力系统.md) - Stamina 属性监听
 - [BP_Character_Game.md](../../00-通用逻辑/核心类/BP_Character_Game.md) - 角色基类
+- [PC_Core.md](../../00-通用逻辑/核心类/PC_Core.md) - HandlePlayerEliminate 后续处理

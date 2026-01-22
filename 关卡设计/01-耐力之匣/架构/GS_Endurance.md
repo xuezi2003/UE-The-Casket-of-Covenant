@@ -31,42 +31,21 @@
 | OnRep_IsDetecting | - | RepNotify 回调，调用 OnDetectingChanged 广播 | ✅ |
 | Server_SetDetecting | Server | 设置 IsDetecting（由 BP_Puppet 的 HandleIsRedLightChange 调用） | ✅ |
 | Multicast_PlayerDetected | Multicast | 广播 OnPlayerDetected（由 Monitor 调用，所有端执行） | ✅ |
-| CheckLevelEndCondition | Server | 检查关卡结束条件，满足时广播 OnLevelShouldEnd | ❌ |
-| NotifyPlayerFinished | Server | 接收玩家到达终点通知，触发结束检查 | ❌ |
 
-### CheckLevelEndCondition() ❌ 待实现
+---
 
-**说明**：统计"终点前存活者"数量，为 0 时广播 `OnLevelShouldEnd`。
+## 关卡结束判定
 
-```
-Switch Has Authority → Authority:
-    ↓
-ActivePlayerCount = 0
-For Each PS in PlayerArray:
-    Character = PS.GetPawn()
-    If Character is Valid:
-        HasFinished = Character.HasMatchingGameplayTag (Player.State.Finished)
-        HasDead = Character.HasMatchingGameplayTag (Player.State.Dead)
-        If NOT HasFinished AND NOT HasDead:
-            ActivePlayerCount++
-    ↓
-If ActivePlayerCount == 0:
-    GS_Core.OnLevelShouldEnd.Broadcast()
-```
+GS_Endurance 使用父类 `GS_Core.CheckLevelShouldEnd()` 进行关卡结束判定。
 
-**调用时机（事件驱动）**：
-- 玩家死亡时（Comp_Character_Endurance.HandleHealthChanged）
-- 玩家到达终点时（BP_FinishLine → NotifyPlayerFinished）
+**触发时机（事件驱动）**：
+- **玩家淘汰**：`Comp_Character_Endurance.HandleHealthChanged` → 发送 `Gameplay.Event.Player.Eliminated` → `PC_Core.HandlePlayerEliminate`
+- **玩家完成**：`BP_FinishLine` → 发送 `Gameplay.Event.Player.Finished` → `PC_Core.HandlePlayerFinish` → `GS_Core.CheckLevelShouldEnd()`
 
-### NotifyPlayerFinished(Character) ❌ 待实现
+**判定逻辑**：由 `GI_FiveBox.CheckLevelEndCondition()` 统计未完成且未淘汰的玩家数量，为 0 时广播 `OnLevelShouldEnd` 事件。
 
-**说明**：接收 BP_FinishLine 的通知，记录玩家完成状态。
-
-```
-Switch Has Authority → Authority:
-    ↓
-(可选：记录完成顺序/时间)
-    ↓
-CheckLevelEndCondition()
-```
+**相关文档**：
+- [GS_Core.md](../../00-通用逻辑/核心类/GS_Core.md) - 父类关卡结束逻辑
+- [GI_FiveBox.md](../../00-通用逻辑/核心类/GI_FiveBox.md) - CheckLevelEndCondition 实现
+- [PC_Core.md](../../00-通用逻辑/核心类/PC_Core.md) - HandlePlayerEliminate / HandlePlayerFinish
 

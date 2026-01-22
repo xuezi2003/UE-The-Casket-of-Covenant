@@ -37,7 +37,7 @@ Sequence
             → HandlePlayerFinish()
 ```
 
-### HandlePlayerEliminate（Custom Event）✅ 已实现
+### HandlePlayerEliminate（Custom Event）⚠️ 部分实现
 
 ```blueprint
 Event HandlePlayerEliminate
@@ -51,6 +51,19 @@ If (IsHuman)
     └─ False → [结束]
 ```
 
+> [!WARNING]
+> **待完善功能**：真人玩家返回主菜单
+> 
+> 当前使用 `PrintText` 占位符，需要替换为：
+> ```blueprint
+> Open Level (by Name)
+>     └─ Level Name: "MainMenu"
+> ```
+> 
+> **注意**：
+> - 开启无缝切换不影响单个玩家的 `Open Level`
+> - `Open Level` 会触发非无缝切换，彻底重置玩家状态
+
 ### HandlePlayerFinish（Custom Event）✅ 已实现
 
 ```blueprint
@@ -61,23 +74,11 @@ BPL_Game_Core.GetGIFiveBox().SetPlayerFinished(PlayerNum)
 GetGameState(GS_Core).CheckLevelShouldEnd()
 ```
 
-> [!WARNING]
-> **待实现：真人玩家返回主菜单**
-> 
-> 当前 `PrintText` 为占位符，后续需替换为：
-> ```blueprint
-> Open Level (by Name)
->     └─ Level Name: "MainMenu"
-> ```
-> 
-> **注意**：
-> - 开启无缝切换不影响单个玩家的 `Open Level`
-> - `Open Level` 会触发非无缝切换，彻底重置玩家状态
-
 **设计说明**：
 - 组件仅在服务端添加，通过复制系统同步到客户端
 - 具体组件类由 GM 子类配置（如 GM_Endurance 配置 Comp_PC_Endurance）
 - 淘汰处理在服务端执行
+- `HandlePlayerEliminate` 当前为部分实现（返回主菜单功能待完善）
 
 ## 输入处理
 

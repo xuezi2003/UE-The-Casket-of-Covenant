@@ -13,9 +13,9 @@
 ## 设计概述
 
 `BP_FinishLine` 是一个触发器 Actor，用于：
-1. 检测玩家穿过终点线
-2. **状态标记**：添加 `Player.State.Finished` 标签（❌ 待实现）
-3. **通知进度**：通知 GameState 玩家到达终点（❌ 待实现）
+1. **碰撞切换**：玩家穿过后切换碰撞通道（PawnBlock → Pawn）
+2. **状态标记**：添加 `Player.State.Finished` 标签（通过 GE_Finish）
+3. **事件通知**：发送 `Gameplay.Event.Player.Finished` 事件
 4. **单向通行**：玩家进入后无法返回赛道
 
 ---
@@ -73,27 +73,37 @@ TriggerBox.SetVisibility(IsDebug, PropagateToChildren=true)
 
 **执行条件**：Server + Client 都执行
 
-当玩家离开触发区域时，通过方向检查确保是“向终点区”离开：
+当玩家离开触发区域时，通过方向检查确保是"向终点区"离开：
 
-```blueprint
 ```blueprint
 Cast to Character
   → [CheckHasThrough]（自定义函数：执行点积判定）
       ├─ True (点积 > 0，确认进入终点区) ↓
-      │   → CapsuleComponent.SetCollisionObjectType(Pawn)  ✅ 已实现
-      │   → SendGameplayEventToActor(Character, Gameplay.Event.Player.Finished)  ✅ 已实现
-      │   → ASC.BP_ApplyGameplayEffectToSelf(GE_Finished)  ✅ 已实现
+      │   → CapsuleComponent.SetCollisionObjectType(Pawn)  ✅
+      │   → SendGameplayEventToActor(Character, Gameplay.Event.Player.Finished)  ✅
+      │   → ASC.BP_ApplyGameplayEffectToSelf(GE_Finish)  ✅
       │   → PrintText（调试用）
       └─ False (说明向赛道退回，不做处理)
 ```
-```
 
 ### CheckHasThrough 函数实现
-计算玩家相对于 FinishLine 的离开矢量，并与 FinishLine 的 Forward Vector 进行点积：
-- **A**: `CharacterLocation - FinishLineLocation`
-- **B**: `FinishLine.GetActorForwardVector`
-- **Return**: `Dot(A, B) > 0`
 
+计算玩家相对于 FinishLine 的离开矢量，并与 FinishLine 的 Forward Vector 进行点积：
+
+```blueprint
+Event CheckHasThrough (Actor: Character) → Returns: bool
+    ↓
+A = Actor.GetActorLocation() - FinishLine.GetActorLocation()
+B = FinishLine.GetActorForwardVector()
+    ↓
+Return (Dot(A, B) > 0)
+```
+
+**设计说明**：
+- **A**: 玩家相对于终点线的位置向量
+- **B**: 终点线的前向向量
+- **点积 > 0**: 表示玩家向终点区方向离开
+- **点积 ≤ 0**: 表示玩家向赛道方向退回（不触发完成）
 
 ---
 
