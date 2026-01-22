@@ -71,5 +71,6 @@ Gameplay.Event.Aim.End,Gameplay.Event.Aim.End,"投掷完成后通知 GA_Aim 结�
 Gameplay.Event.Attack,Gameplay.Event.Attack,"攻击相关事件"
 Gameplay.Event.Attack.Detect,Gameplay.Event.Attack.Detect,"由监视器检测触发的攻击事件"
 Gameplay.Event.Player,Gameplay.Event.Player,"玩家流程相关事件"
+Gameplay.Event.Player.Started,Gameplay.Event.Player.Started,"玩家离开起点事件"
 Gameplay.Event.Player.Eliminated,Gameplay.Event.Player.Eliminated,"玩家淘汰事件（死亡时发送）"
 Gameplay.Event.Player.Finished,Gameplay.Event.Player.Finished,"玩家到达终点事件"

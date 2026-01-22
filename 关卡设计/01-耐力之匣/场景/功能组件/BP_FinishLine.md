@@ -13,10 +13,13 @@
 ## 设计概述
 
 `BP_FinishLine` 是一个触发器 Actor，用于：
-1. **碰撞切换**：玩家穿过后切换碰撞通道（PawnBlock → Pawn）
-2. **状态标记**：添加 `Player.State.Finished` 标签（通过 GE_Finish）
-3. **事件通知**：发送 `Gameplay.Event.Player.Finished` 事件
-4. **单向通行**：玩家进入后无法返回赛道
+1. **事件通知**：发送 `Gameplay.Event.Player.Finished` 事件
+2. **单向通行**：玩家进入后无法返回赛道
+
+**职责分工**：
+- **BP_FinishLine**：只负责场景触发和事件发送
+- **Comp_Character_Endurance**：负责状态标记（GE_Finish）和碰撞切换
+- **GM_Core**：负责档案管理（SetPlayerFinished）和关卡检查
 
 ---
 
@@ -79,12 +82,15 @@ TriggerBox.SetVisibility(IsDebug, PropagateToChildren=true)
 Cast to Character
   → [CheckHasThrough]（自定义函数：执行点积判定）
       ├─ True (点积 > 0，确认进入终点区) ↓
-      │   → CapsuleComponent.SetCollisionObjectType(Pawn)  ✅
       │   → SendGameplayEventToActor(Character, Gameplay.Event.Player.Finished)  ✅
-      │   → ASC.BP_ApplyGameplayEffectToSelf(GE_Finish)  ✅
       │   → PrintText（调试用）
       └─ False (说明向赛道退回，不做处理)
 ```
+
+**设计说明**：
+- BP_FinishLine 只负责场景触发和事件发送
+- 状态标记（GE_Finish）和碰撞切换由 Comp_Character_Endurance.HandlePlayerFinish 处理
+- 档案管理（SetPlayerFinished）和关卡检查由 GM_Core.HandlePlayerFinish 处理
 
 ### CheckHasThrough 函数实现
 
@@ -127,3 +133,5 @@ Return (Dot(A, B) > 0)
 - [BP_Section_End.md](../结构组件/BP_Section_End.md) - 终点封闭墙
 - [BP_Monitor.md](../木偶与监视器/BP_Monitor.md) - 监视器
 - [碰撞预设配置.md](../../00-通用逻辑/碰撞预设配置.md) - Pawn/PawnBlock 通道配置
+- [Comp_Character_Endurance.md](../../架构/Comp_Character_Endurance.md) - HandlePlayerFinish 状态标记
+- [GM_Core.md](../../../00-通用逻辑/核心类/GM_Core.md) - HandlePlayerFinish 档案管理

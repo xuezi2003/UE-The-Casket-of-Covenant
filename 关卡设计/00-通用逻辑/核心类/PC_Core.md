@@ -13,31 +13,45 @@
 
 ### Event OnPossess ✅ 已更新
 
-动态添加关卡专属组件 + 监听淘汰/完成事件：
+动态添加关卡专属组件 + 绑定淘汰/完成事件监听：
 
 ```blueprint
-Event ReceivePossess (PossessedPawn)
+Event OnPossess (PossessedPawn)
     ↓
-Call Parent: ReceivePossess
+Call Parent: OnPossess
     ↓
 Switch Has Authority → Authority:
     ↓
 Sequence
-    ├─ then_0: [原有逻辑] 添加关卡组件
+    ├─ then_0: 添加关卡组件
     │   Cast GetGameMode() to GM_Core
     │       → If IsValidClass(LevelPCComponentClass)
     │           → AddComponentByClass
     │               → SetIsReplicated(true)
     │                   → SET LevelPCComp
     │
-    └─ then_1: [新增] 监听 Gameplay 事件
-        AsyncAction: 等待 Gameplay 事件到 Actor (Eliminated)
-            → HandlePlayerEliminate()
-        AsyncAction: 等待 Gameplay 事件到 Actor (Finished)
-            → HandlePlayerFinish()
+    └─ then_1: 绑定事件监听
+        ├─ AsyncAction: Wait for Gameplay Event to Actor
+        │   ├─ Target: PossessedPawn (Character)
+        │   ├─ Event Tag: Gameplay.Event.Player.Eliminated
+        │   └─ On Event Received → HandlePlayerEliminate()
+        │
+        └─ AsyncAction: Wait for Gameplay Event to Actor
+            ├─ Target: PossessedPawn (Character)
+            ├─ Event Tag: Gameplay.Event.Player.Finished
+            └─ On Event Received → HandlePlayerFinish()
 ```
 
+**设计说明**：
+- 组件仅在服务端添加，通过复制系统同步到客户端
+- 具体组件类由 GM 子类配置（如 GM_Endurance 配置 Comp_PC_Endurance）
+- **事件监听架构**：GM_Core 和 PC_Core 都监听 Character 的淘汰/完成事件（事件多播模式）
+  - GM_Core 负责：档案管理 + 关卡检查
+  - PC_Core 负责：真人玩家的特殊逻辑（UnPossess + 返回主菜单）
+
 ### HandlePlayerEliminate（Custom Event）⚠️ 部分实现
+
+**说明**：只处理真人玩家的特殊逻辑（UnPossess + 返回主菜单）
 
 ```blueprint
 Event HandlePlayerEliminate
@@ -64,21 +78,35 @@ If (IsHuman)
 > - 开启无缝切换不影响单个玩家的 `Open Level`
 > - `Open Level` 会触发非无缝切换，彻底重置玩家状态
 
-### HandlePlayerFinish（Custom Event）✅ 已实现
+**设计说明**：
+- PC_Core 只负责真人玩家的特殊逻辑（UnPossess、返回主菜单）
+- **档案管理和关卡检查由 GM_Core 统一处理**
+- 事件监听由 GM_Core.HandlePlayerLogin 绑定
+
+**触发来源**：
+- PC_Core.OnPossess 中绑定的事件监听（监听 Gameplay.Event.Player.Eliminated）
+- Comp_Character_Endurance.HandleHealthChanged 发送此事件
+
+---
+
+### HandlePlayerFinish（Custom Event）✅ 已清空
 
 ```blueprint
 Event HandlePlayerFinish
     ↓
-BPL_Game_Core.GetGIFiveBox().SetPlayerFinished(PlayerNum)
-    ↓
-GetGameState(GS_Core).CheckLevelShouldEnd()
+[Path ends]
 ```
 
 **设计说明**：
-- 组件仅在服务端添加，通过复制系统同步到客户端
-- 具体组件类由 GM 子类配置（如 GM_Endurance 配置 Comp_PC_Endurance）
-- 淘汰处理在服务端执行
-- `HandlePlayerEliminate` 当前为部分实现（返回主菜单功能待完善）
+- 此函数已清空，不再处理档案管理和关卡检查
+- **档案管理和关卡检查由 GM_Core 统一处理**
+- 如果未来需要真人玩家的特殊完成逻辑，可以在此添加
+
+**触发来源**：
+- PC_Core.OnPossess 中绑定的事件监听（监听 Gameplay.Event.Player.Finished）
+- BP_FinishLine.OnComponentEndOverlap 发送此事件
+
+---
 
 ## 输入处理
 
@@ -119,3 +147,4 @@ PC_Core
 - [UI 架构概述](../UI/架构概述.md) - UI 分层设计
 - [输入系统.md](../输入系统.md) - 输入分层架构
 - [Comp_PC_Endurance.md](../../01-耐力之匣/架构/Comp_PC_Endurance.md) - 关卡1 PC 组件
+- [GM_Core.md](GM_Core.md) - 淘汰/完成事件监听和档案管理

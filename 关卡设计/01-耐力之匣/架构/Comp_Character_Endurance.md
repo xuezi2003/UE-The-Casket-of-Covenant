@@ -37,9 +37,9 @@ Get Owner → Cast To BP_Character_Game → SET BP_Character
 Set Timer by Function Name (WaitForASC, Looping)
 ```
 
-### WaitForASC（自定义事件）
+### WaitForASC（自定义事件）✅ 已更新
 
-```
+```blueprint
 BP_Character → Get Component by Class (GSCCoreComponent) → SET GSCCore
     ↓
 Get Ability System Component from Actor (BP_Character)
@@ -48,10 +48,16 @@ Is Valid?
     ├─ Yes → SET ASC → Clear Timer (WaitForASC)
     │        → Bind Event to On Gameplay Tag Change (GSCCore) → HandleTagChanged
     │        → Bind Event to On Attribute Change (GSCCore) → HandleAttributeChanged
+    │        → AsyncAction: Wait for Gameplay Event (Gameplay.Event.Player.Started)
+    │            → HandlePlayerStart()
+    │        → AsyncAction: Wait for Gameplay Event (Gameplay.Event.Player.Finished)
+    │            → HandlePlayerFinish()
     └─ No → 继续等待
 ```
 
-**注意**：ASC 挂在 PlayerState 上（GSC 架构），必须通过 GSCCore 组件获取。
+**注意**：
+- ASC 挂在 PlayerState 上（GSC 架构），必须通过 GSCCore 组件获取
+- 新增两个事件监听：Started 和 Finished，用于处理起点/终点的碰撞切换和状态标记
 
 ### HandleAttributeChanged（自定义事件）
 
@@ -116,7 +122,7 @@ Has Matching Gameplay Tag (Player.State.Exhausted)?
 
 ### HandleHealthChanged（函数）✅ 已实现
 
-**说明**：HP 归零时执行完整的死亡与淘汰流程。
+**说明**：HP 归零时执行完整的死亡流程。
 
 **执行流程**：
 
@@ -137,41 +143,95 @@ If (GetFloatAttribute(BAS_Core.Health) <= 0 AND NOT ASC.HasMatchingGameplayTag(P
         │       Cast HitActor to Character
         │           → SendGameplayEventToActor (Gameplay.Event.Activate.Stagger)
         │
-        └─ then_1: 淘汰处理链（顺序执行）
-            ├─ 【步骤 4】记录淘汰状态
-            │   SetPlayerEliminate()
-            │       → GI_FiveBox.SetPlayerEliminated(PlayerNum)
-            │
-            ├─ 【步骤 5】掉落金币
+        └─ then_1: 死亡处理链（顺序执行）
+            ├─ 【步骤 4】掉落金币
             │   SpawnDeadCoin()
             │       → For Loop: Spawn BP_Item_Coin (数量 = Coin 属性值)
             │
-            ├─ 【步骤 6】死亡表现（所有端执行）
+            ├─ 【步骤 5】死亡表现（所有端执行）
             │   Multicast_OnDeath()
             │       ├─ CapsuleComponent.SetCollisionEnabled(无碰撞)
             │       ├─ Mesh.SetSimulatePhysics(true) ← Ragdoll
             │       └─ CharacterMovement.DisableMovement()
             │
-            └─ 【步骤 7】发送淘汰事件（触发 PC_Core 后续处理）
+            └─ 【步骤 6】发送淘汰事件
                 SendGameplayEventToActor (BP_Character, Gameplay.Event.Player.Eliminated)
-                    → PC_Core.HandlePlayerEliminate (监听此事件)
+                    → GM_Core.HandlePlayerEliminate (监听此事件)
+                        ├─ GI_FiveBox.SetPlayerEliminated(PlayerNum) ✅
+                        └─ GS_Core.CheckLevelShouldEnd() ✅
+                    → PC_Core.HandlePlayerEliminate (监听此事件，仅真人)
                         ├─ UnPossess() ✅
                         └─ 真人玩家返回主菜单 ⚠️ 待实现
 ```
 
 **设计说明**：
-- 步骤 1-7 在 `Comp_Character_Endurance` 中完整实现
-- 步骤 7 发送的淘汰事件由 `PC_Core.HandlePlayerEliminate` 监听处理
-- 关卡结束检查不在淘汰流程中触发，而是由玩家完成事件触发（详见 [PC_Core.md](../../00-通用逻辑/核心类/PC_Core.md)）
+- 步骤 1-6 在 `Comp_Character_Endurance` 中完整实现
+- 步骤 6 发送的淘汰事件由 `GM_Core.HandlePlayerEliminate` 和 `PC_Core.HandlePlayerEliminate` 监听处理
+- **档案管理和关卡检查由 GM_Core 统一处理**，不在 Character 组件中直接操作档案
 
-### SetPlayerEliminate（函数）✅ 已实现
+### SetPlayerEliminate（函数）❌ 已删除
+
+> [!IMPORTANT]
+> **架构优化**：此函数已删除，档案管理统一由 GM_Core 处理。
+> 
+> **原因**：
+> - Character 组件不应该直接操作档案（GI_FiveBox）
+> - 淘汰和完成的档案管理应该由 GM_Core 统一处理
+> - 修复了 AI 完成状态丢失的 Bug
+> 
+> **新流程**：
+> ```
+> HandleHealthChanged 发送 Gameplay.Event.Player.Eliminated
+>     ↓
+> GM_Core.HandlePlayerEliminate 监听事件
+>     ↓
+> GI_FiveBox.SetPlayerEliminated(PlayerNum)
+> ```
+> 
+> 详见 [GM_Core.md](../../00-通用逻辑/核心类/GM_Core.md#handleplayereliminate-custom-event-已实现)
+
+---
+
+### HandlePlayerStart（函数）✅ 已实现
+
+**说明**：玩家穿过起点线后，切换碰撞通道，实现单向通行。
 
 ```blueprint
-Event SetPlayerEliminate
+Event HandlePlayerStart
     ↓
-BPL_Game_Core.GetGIFiveBox()
-    → GI_FiveBox.SetPlayerEliminate (EliminatePlayerNum = PS_FiveBox.PlayerNum)
+BP_Character.CapsuleComponent.SetCollisionObjectType(PawnBlock)
 ```
+
+**触发来源**：
+- BP_StartLine.OnComponentEndOverlap 发送 Gameplay.Event.Player.Started 事件
+
+**设计说明**：
+- 碰撞切换由 Character 组件处理，而不是场景 Actor
+- 和 HandlePlayerFinish 架构对称
+
+---
+
+### HandlePlayerFinish（函数）✅ 已实现
+
+**说明**：玩家到达终点后，应用完成标签和切换碰撞通道。
+
+```blueprint
+Event HandlePlayerFinish
+    ↓
+ASC.BP_ApplyGameplayEffectToSelf(GE_Finish)
+    ↓
+BP_Character.CapsuleComponent.SetCollisionObjectType(Pawn)
+```
+
+**触发来源**：
+- BP_FinishLine.OnComponentEndOverlap 发送 Gameplay.Event.Player.Finished 事件
+
+**设计说明**：
+- 状态标记（GE_Finish）和碰撞切换由 Character 组件处理
+- 档案管理（SetPlayerFinished）由 GM_Core 处理
+- 职责清晰，架构优雅
+
+---
 
 ### SpawnDeadCoin（函数）✅ 已实现
 
@@ -307,4 +367,7 @@ SET PropInHandComp = None
 - [伤害系统.md](../GAS/伤害系统.md) - GA_Attacked / GE_Damage_Detect
 - [体力系统.md](../GAS/体力系统.md) - Stamina 属性监听
 - [BP_Character_Game.md](../../00-通用逻辑/核心类/BP_Character_Game.md) - 角色基类
+- [GM_Core.md](../../00-通用逻辑/核心类/GM_Core.md) - 淘汰/完成档案管理
 - [PC_Core.md](../../00-通用逻辑/核心类/PC_Core.md) - HandlePlayerEliminate 后续处理
+- [BP_FinishLine.md](../场景/功能组件/BP_FinishLine.md) - 终点线触发器
+- [BP_StartLine.md](../场景/功能组件/BP_StartLine.md) - 起点线触发器

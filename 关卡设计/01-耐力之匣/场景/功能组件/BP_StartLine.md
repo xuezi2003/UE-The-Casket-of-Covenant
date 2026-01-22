@@ -13,11 +13,13 @@
 ## 设计概述
 
 `BP_StartLine` 是一个触发器 Actor，用于：
-1. 检测玩家离开起点区域
+1. **事件通知**：发送 `Gameplay.Event.Player.Started` 事件
 2. **单向通行**：玩家离开后无法返回起点
-3. **能力赋予**：玩家穿过时赋予关卡能力（❌ 待实现）
-4. **状态标记**：移除"在起点"标签（❌ 待实现）
-5. **通知进度**：通知 GameState 该玩家已离开起点（❌ 待实现）
+
+**职责分工**：
+- **BP_StartLine**：只负责场景触发和事件发送
+- **Comp_Character_Endurance**：负责碰撞切换（Pawn → PawnBlock）
+- **能力赋予**：已在 GM_Core.Spawn 时通过 LevelAbilitySet 赋予，不需要在 StartLine 实现
 
 ---
 
@@ -56,7 +58,6 @@ BP_StartLine
 |--------|------|------|
 | `TriggerBox` | UBoxComponent* | 触发体积 |
 | `IsDebug` | Bool | 调试模式（控制 TriggerBox 可见性） |
-| `AbilitiesToGrant` | TArray\<TSubclassOf\<UGameplayAbility\>\> | 穿过时赋予的能力列表 |
 
 ---
 
@@ -78,23 +79,21 @@ TriggerBox.SetVisibility(IsDebug, PropagateToChildren=true)
 Cast to Character
   → [CheckHasThrough]（自定义函数：执行点积判定）
       ├─ True (点积 > 0，确认向赛道离开) ↓
-      │   → CapsuleComponent.SetCollisionObjectType(PawnBlock)
-      │   → GrantAbilities（❌ 待实现：Server Only）
-      │   → Remove 'AtStart' Tag（❌ 待实现：Server Only）
-      │   → Notify GameState（❌ 待实现）
+      │   → SendGameplayEventToActor(Character, Gameplay.Event.Player.Started)  ✅
       │   → PrintText（调试用）
       └─ False (说明向出生点退回，不做处理)
 ```
+
+**设计说明**：
+- BP_StartLine 只负责场景触发和事件发送
+- 碰撞切换（Pawn → PawnBlock）由 Comp_Character_Endurance.HandlePlayerStart 处理
+- 和 BP_FinishLine 架构完全对称
 
 ### CheckHasThrough 函数实现
 计算玩家相对于 StartLine 的离开矢量，并与 StartLine 的 Forward Vector 进行点积：
 - **A**: `CharacterLocation - StartLineLocation`
 - **B**: `StartLine.GetActorForwardVector`
 - **Return**: `Dot(A, B) > 0`
-
-
-> [!NOTE]
-> Collision Object Type 不会自动复制，需要 Server + Client 都执行碰撞切换。
 
 ---
 
@@ -118,4 +117,5 @@ Cast to Character
 - [BP_Section_Start.md](../结构组件/BP_Section_Start.md) - 起点封闭墙
 - [场景组件.md](../场景组件.md) - 组件索引
 - [碰撞预设配置.md](../../00-通用逻辑/碰撞预设配置.md) - PawnBlock 通道配置
+- [Comp_Character_Endurance.md](../../架构/Comp_Character_Endurance.md) - HandlePlayerStart 碰撞切换
 
