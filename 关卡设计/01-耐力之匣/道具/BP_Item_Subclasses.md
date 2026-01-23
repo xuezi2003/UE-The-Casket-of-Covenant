@@ -31,9 +31,9 @@ Call Parent: OnHit(HitActor)
     ↓
 Cast HitActor to BP_Character_Game
     ├─ 成功 ↓
-    │   HitActor != Instigator?  ← 不能打自己
+    │   HitActor != Instigator?
     │       └─ True ↓
-    │       SendGameplayEventToActor (HitActor, Gameplay.Event.Activate.Stagger)
+    │       SendGameplayEventToActor (HitActor, Gameplay.Event.Activate.Stagger.Push)
     │           ↓
     │       DestroyActor
     │
@@ -53,7 +53,7 @@ Call Parent: OnTrap(TrappedCharacter)
     ↓
 Switch Has Authority
     └─ Authority ↓
-SendGameplayEventToActor (TrappedCharacter, Gameplay.Event.Activate.Stagger)
+SendGameplayEventToActor (TrappedCharacter, Gameplay.Event.Activate.Stagger.Push)
     ↓
 DestroyActor
 ```
@@ -94,17 +94,22 @@ Call Parent: OnHit(HitActor)
     ↓
 Cast HitActor to BP_Character_Game
     ├─ 成功 ↓
-    │   HitActor != Instigator?  ← 不能炸自己
+    │   HitActor != Instigator?
     │       └─ True ↓
     │       SendGameplayEventToActor (HitActor, Gameplay.Event.Activate.Fall)
     │           ↓
     │       DestroyActor
     │
     └─ 失败（命中地面/障碍物）↓
-        SphereOverlapActors (Pos=Self.Location, Radius=BombRadius, 
-                             Class=BP_Character_Game, Ignore=[Instigator])
+        SphereOverlapActors (
+            ActorClassFilter: BP_Character_Game,
+            ActorsToIgnore: [Instigator],
+            ObjectTypes: [],
+            SpherePos: K2_GetActorLocation(),
+            SphereRadius: BombRadius
+        )
             ↓
-        DrawDebugSphere (调试用，Phase 9 移除)
+        DrawDebugSphere (调试用)
             ↓
         For Each (OutActors)
             ├─ LoopBody: SendGameplayEventToActor (Actor, Gameplay.Event.Activate.Fall)
@@ -161,7 +166,7 @@ EndAbility
 
 **父类**：BP_Item_Base
 
-**效果**：拾取后获得护盾，抵消一次攻击或检测伤害减半
+**效果**：拾取后获得护盾，完全抵消一次攻击或检测伤害
 
 ### 实现方式
 
@@ -193,10 +198,10 @@ EndAbility
 
 ### 护盾消耗逻辑
 
-需要在以下位置检查 `Player.State.Buffed.Shield`：
-- GA_Stagger：被推搡时
-- GA_Fall：被炸弹击中时
-- BP_Monitor：被检测时（伤害减半）
+需要在以下 GA 中检查 `Player.State.Buffed.Shield`：
+- GA_Stagger：被推搡/香蕉触发失衡时（完全抵消）
+- GA_Fall：被炸弹击中触发摔倒时（完全抵消）
+- GA_Attacked：被木偶检测到时（完全抵消）
 
 ---
 

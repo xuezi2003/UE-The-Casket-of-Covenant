@@ -28,8 +28,12 @@
 使用**动态碰撞通道切换**实现单向阻挡：
 
 1. 玩家初始碰撞通道为 `Pawn`
-2. 穿过 StartLine（EndOverlap）后切换为 `PawnBlock`
-3. 返回时被 StartLine Block，无法返回出生点
+2. 穿过 StartLine 后切换为 `PawnBlock`
+3. StartLine TriggerBox 对 `PawnBlock` 阻挡，对 `Pawn` 重叠
+4. 穿过后的玩家被 StartLine 阻挡，无法返回出生点
+
+> [!NOTE]
+> 碰撞切换不影响玩家之间的碰撞（Pawn 和 PawnBlock 对彼此都是阻挡），只改变玩家与 TriggerBox 的碰撞关系。
 
 > [!IMPORTANT]
 > **系统预设修改**：`OverlapAllDynamic` Profile 需要修改：

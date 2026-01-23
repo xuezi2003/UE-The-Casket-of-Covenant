@@ -37,7 +37,7 @@ Get Owner → Cast To BP_Character_Game → SET BP_Character
 Set Timer by Function Name (WaitForASC, Looping)
 ```
 
-### WaitForASC（自定义事件）✅ 已更新
+### WaitForASC（自定义事件）✅
 
 ```blueprint
 BP_Character → Get Component by Class (GSCCoreComponent) → SET GSCCore
@@ -55,10 +55,6 @@ Is Valid?
     └─ No → 继续等待
 ```
 
-**注意**：
-- ASC 挂在 PlayerState 上（GSC 架构），必须通过 GSCCore 组件获取
-- 新增两个事件监听：Started 和 Finished，用于处理起点/终点的碰撞切换和状态标记
-
 ### HandleAttributeChanged（自定义事件）
 
 参数：Attribute, DeltaValue, EventTags
@@ -67,10 +63,8 @@ Is Valid?
 Switch on Gameplay Attribute (Attribute)
     ↓
 BAS_Core.Stamina → HandleStaminaChanged
-BAS_Core.Health → HandleHealthChanged  // Phase 6 新增
+BAS_Core.Health → HandleHealthChanged
 ```
-
-**说明**：使用 GSCCore 官方的 `On Attribute Change` 事件绑定，替代自定义 Async Task。
 
 ### HandleTagChanged（自定义事件）
 
@@ -95,8 +89,6 @@ IsRunning?
 
 ### HandleCrouching（函数）
 
-**说明**：蹲下/起身过程中添加危险标签（0.2 秒内算移动）
-
 ```
 ApplyGameplayEffectToSelf (GE_Moving)
     ↓
@@ -107,94 +99,43 @@ RemoveActiveGameplayEffectBySourceEffect (GE_Moving, Stacks = -1)
 
 ### HandleStaminaChanged（函数）
 
-**说明**：采用滞后阈值逻辑，避免力竭边界抖动。
-
 ```
 Has Matching Gameplay Tag (Player.State.Exhausted)?
     ├─ 否（未力竭） → Stamina <= 0? → ApplyGameplayEffectToSelf (GE_Exhausted)
     └─ 是（已力竭） → Stamina >= ExhaustedThreshold? → RemoveActiveGameplayEffectBySourceEffect (GE_Exhausted)
 ```
 
-**阈值设计**：
-- 进入力竭：Stamina = 0
-- 退出力竭：Stamina ≥ 15（ExhaustedThreshold）
-- 好处：防止体力在阈值边缘反复触发力竭状态
-
-### HandleHealthChanged（函数）✅ 已实现
-
-**说明**：HP 归零时执行完整的死亡流程。
-
-**执行流程**：
+### HandleHealthChanged（函数）✅
 
 ```blueprint
-If (GetFloatAttribute(BAS_Core.Health) <= 0 AND NOT ASC.HasMatchingGameplayTag(Player.State.Dead))
+If (GetFloatAttributeFromAbilitySystemComponent(ASC, BAS_Core.Health) <= 0 
+    AND NOT ASC.HasMatchingGameplayTag(Player.State.Dead))
     ↓ True
-    【步骤 1】应用死亡标签
     ASC.BP_ApplyGameplayEffectToSelf (GE_Dead)
         ↓
     Switch Has Authority → Authority:
         ↓
-    【步骤 2】范围检测（死亡广播）
-    SphereTraceMulti (Channel: PuppetVision, Radius: DeathEffectRadius, IgnoreSelf)
+    SphereOverlapActors (
+        ActorClassFilter: BP_Character_Game,
+        ActorsToIgnore: [BP_Character],
+        ObjectTypes: [],
+        SpherePos: BP_Character.K2_GetActorLocation(),
+        SphereRadius: DeathEffectRadius
+    )
         ↓
-    Sequence（并行执行两个分支）
-        ├─ then_0: 【步骤 3】死亡广播 - 周围玩家失衡
-        │   For Each in OutHits:
-        │       Cast HitActor to Character
-        │           → SendGameplayEventToActor (Gameplay.Event.Activate.Stagger)
+    Sequence
+        ├─ then_0: 死亡广播
+        │   For Each in OutActors:
+        │       Cast to Character
+        │           → SendGameplayEventToActor (Gameplay.Event.Activate.Stagger.DeathBroadcast)
         │
-        └─ then_1: 死亡处理链（顺序执行）
-            ├─ 【步骤 4】掉落金币
-            │   SpawnDeadCoin()
-            │       → For Loop: Spawn BP_Item_Coin (数量 = Coin 属性值)
-            │
-            ├─ 【步骤 5】死亡表现（所有端执行）
-            │   Multicast_OnDeath()
-            │       ├─ CapsuleComponent.SetCollisionEnabled(无碰撞)
-            │       ├─ Mesh.SetSimulatePhysics(true) ← Ragdoll
-            │       └─ CharacterMovement.DisableMovement()
-            │
-            └─ 【步骤 6】发送淘汰事件
-                SendGameplayEventToActor (BP_Character, Gameplay.Event.Player.Eliminated)
-                    → GM_Core.HandlePlayerEliminate (监听此事件)
-                        ├─ GI_FiveBox.SetPlayerEliminated(PlayerNum) ✅
-                        └─ GS_Core.CheckLevelShouldEnd() ✅
-                    → PC_Core.HandlePlayerEliminate (监听此事件，仅真人)
-                        ├─ UnPossess() ✅
-                        └─ 真人玩家返回主菜单 ⚠️ 待实现
+        └─ then_1: 死亡处理链
+            ├─ SpawnDeadCoin()
+            ├─ Multicast_OnDeath()
+            └─ SendGameplayEventToActor (BP_Character, Gameplay.Event.Player.Eliminated)
 ```
 
-**设计说明**：
-- 步骤 1-6 在 `Comp_Character_Endurance` 中完整实现
-- 步骤 6 发送的淘汰事件由 `GM_Core.HandlePlayerEliminate` 和 `PC_Core.HandlePlayerEliminate` 监听处理
-- **档案管理和关卡检查由 GM_Core 统一处理**，不在 Character 组件中直接操作档案
-
-### SetPlayerEliminate（函数）❌ 已删除
-
-> [!IMPORTANT]
-> **架构优化**：此函数已删除，档案管理统一由 GM_Core 处理。
-> 
-> **原因**：
-> - Character 组件不应该直接操作档案（GI_FiveBox）
-> - 淘汰和完成的档案管理应该由 GM_Core 统一处理
-> - 修复了 AI 完成状态丢失的 Bug
-> 
-> **新流程**：
-> ```
-> HandleHealthChanged 发送 Gameplay.Event.Player.Eliminated
->     ↓
-> GM_Core.HandlePlayerEliminate 监听事件
->     ↓
-> GI_FiveBox.SetPlayerEliminated(PlayerNum)
-> ```
-> 
-> 详见 [GM_Core.md](../../00-通用逻辑/核心类/GM_Core.md#handleplayereliminate-custom-event-已实现)
-
----
-
-### HandlePlayerStart（函数）✅ 已实现
-
-**说明**：玩家穿过起点线后，切换碰撞通道，实现单向通行。
+### HandlePlayerStart（函数）✅
 
 ```blueprint
 Event HandlePlayerStart
@@ -202,18 +143,9 @@ Event HandlePlayerStart
 BP_Character.CapsuleComponent.SetCollisionObjectType(PawnBlock)
 ```
 
-**触发来源**：
-- BP_StartLine.OnComponentEndOverlap 发送 Gameplay.Event.Player.Started 事件
-
-**设计说明**：
-- 碰撞切换由 Character 组件处理，而不是场景 Actor
-- 和 HandlePlayerFinish 架构对称
-
 ---
 
-### HandlePlayerFinish（函数）✅ 已实现
-
-**说明**：玩家到达终点后，应用完成标签和切换碰撞通道。
+### HandlePlayerFinish（函数）✅
 
 ```blueprint
 Event HandlePlayerFinish
@@ -223,32 +155,24 @@ ASC.BP_ApplyGameplayEffectToSelf(GE_Finish)
 BP_Character.CapsuleComponent.SetCollisionObjectType(Pawn)
 ```
 
-**触发来源**：
-- BP_FinishLine.OnComponentEndOverlap 发送 Gameplay.Event.Player.Finished 事件
-
-**设计说明**：
-- 状态标记（GE_Finish）和碰撞切换由 Character 组件处理
-- 档案管理（SetPlayerFinished）由 GM_Core 处理
-- 职责清晰，架构优雅
-
 ---
 
-### SpawnDeadCoin（函数）✅ 已实现
+### SpawnDeadCoin（函数）✅
 
 ```blueprint
 Event SpawnDeadCoin
     ↓
-For Loop (0 to FFloor(GetFloatAttribute(BAS_Core.Coin)))
+Delay (1s)
+    ↓
+For Loop (1 to FFloor(GetFloatAttribute(BAS_Core.Coin)))
     ↓ LoopBody
     SpawnActor (BP_Item_Coin)
-        ├─ Location: BP_Character.GetActorLocation() + RandomXY(0~50)
-        └─ InitialState: InField
+        ├─ Location: BP_Character.GetActorLocation() + RandomXY(0~80)
+        ├─ InitialState: InField
+        └─ Instigator: BP_Character
 ```
 
-> [!NOTE]
-> **子类默认 ItemID**：`BP_Item_Coin` 子类的 Class Defaults 已预设 `ItemID = "Coin"`，Spawn 时无需传入。
-
-### Multicast_OnDeath（Custom Event）✅ 已实现
+### Multicast_OnDeath（Custom Event）✅
 
 **类型**：NetMulticast, Reliable
 
@@ -257,19 +181,16 @@ Event Multicast_OnDeath
     ↓
 BP_Character.CapsuleComponent.SetCollisionEnabled (NoCollision)
     ↓
+BP_Character.Mesh.SetCollisionEnabled (QueryAndPhysics)
+    ↓
 BP_Character.Mesh.SetSimulatePhysics (true)
     ↓
 BP_Character.CharacterMovement.DisableMovement()
 ```
 
-**设计说明**：
-- 在所有端执行（Multicast），确保死亡表现同步
-- Ragdoll 效果由 `SetSimulatePhysics(true)` 实现
-- 禁用碰撞避免死亡后仍然阻挡其他玩家
-
 ---
 
-### UpdateMoving（Tick 调用，仅服务端）
+### HandleMoving（函数）
 
 ```
 Switch Has Authority
@@ -280,10 +201,6 @@ Is Valid (ASC)
     ├── True → NOT IsMoving? → Apply GE_Moving → SET IsMoving = true
     └── False → IsMoving? → Remove GE_Moving → SET IsMoving = false
 ```
-
-**GE_Moving 效果**：
-- 添加 `Player.State.Moving` 标签（表示移动中）
-- 添加 `Player.State.Danger` 标签（红灯时被检测到会扣 HP）
 
 ---
 
@@ -366,8 +283,7 @@ SET PropInHandComp = None
 
 - [伤害系统.md](../GAS/伤害系统.md) - GA_Attacked / GE_Damage_Detect
 - [体力系统.md](../GAS/体力系统.md) - Stamina 属性监听
-- [BP_Character_Game.md](../../00-通用逻辑/核心类/BP_Character_Game.md) - 角色基类
-- [GM_Core.md](../../00-通用逻辑/核心类/GM_Core.md) - 淘汰/完成档案管理
+- [BP_Character_Game.md](../../00-通用逻辑/核心类/BP_Character_Game.md) - 角色基类，档案管理事件监听
 - [PC_Core.md](../../00-通用逻辑/核心类/PC_Core.md) - HandlePlayerEliminate 后续处理
 - [BP_FinishLine.md](../场景/功能组件/BP_FinishLine.md) - 终点线触发器
 - [BP_StartLine.md](../场景/功能组件/BP_StartLine.md) - 起点线触发器

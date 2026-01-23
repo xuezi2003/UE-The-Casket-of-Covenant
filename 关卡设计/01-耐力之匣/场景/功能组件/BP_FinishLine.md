@@ -19,7 +19,7 @@
 **职责分工**：
 - **BP_FinishLine**：只负责场景触发和事件发送
 - **Comp_Character_Endurance**：负责状态标记（GE_Finish）和碰撞切换
-- **GM_Core**：负责档案管理（SetPlayerFinished）和关卡检查
+- **BP_Character_Game**：负责档案管理（SetPlayerFinished）和关卡检查
 
 ---
 
@@ -36,8 +36,12 @@
 使用**动态碰撞通道切换**实现单向阻挡：
 
 1. 玩家穿过 StartLine 后碰撞通道为 `PawnBlock`
-2. 穿过 FinishLine（EndOverlap）后切换为 `Pawn`
-3. 返回时被 FinishLine Block，无法返回赛道
+2. 穿过 FinishLine 后切换为 `Pawn`
+3. FinishLine TriggerBox 对 `Pawn` 阻挡，对 `PawnBlock` 重叠
+4. 完成后的玩家被 FinishLine 阻挡，无法返回赛道
+
+> [!NOTE]
+> 碰撞切换不影响玩家之间的碰撞（Pawn 和 PawnBlock 对彼此都是阻挡），只改变玩家与 TriggerBox 的碰撞关系。
 
 ---
 
@@ -90,7 +94,7 @@ Cast to Character
 **设计说明**：
 - BP_FinishLine 只负责场景触发和事件发送
 - 状态标记（GE_Finish）和碰撞切换由 Comp_Character_Endurance.HandlePlayerFinish 处理
-- 档案管理（SetPlayerFinished）和关卡检查由 GM_Core.HandlePlayerFinish 处理
+- 档案管理（SetPlayerFinished）和关卡检查由 BP_Character_Game.HandlePlayerFinish 处理
 
 ### CheckHasThrough 函数实现
 
@@ -134,4 +138,4 @@ Return (Dot(A, B) > 0)
 - [BP_Monitor.md](../木偶与监视器/BP_Monitor.md) - 监视器
 - [碰撞预设配置.md](../../00-通用逻辑/碰撞预设配置.md) - Pawn/PawnBlock 通道配置
 - [Comp_Character_Endurance.md](../../架构/Comp_Character_Endurance.md) - HandlePlayerFinish 状态标记
-- [GM_Core.md](../../../00-通用逻辑/核心类/GM_Core.md) - HandlePlayerFinish 档案管理
+- [BP_Character_Game.md](../../../00-通用逻辑/核心类/BP_Character_Game.md) - HandlePlayerFinish 档案管理

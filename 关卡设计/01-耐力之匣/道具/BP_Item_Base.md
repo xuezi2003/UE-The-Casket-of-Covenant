@@ -195,11 +195,14 @@ OnPickup(NewOwner)
     ↓
 Switch Has Authority
     ↓ Authority
-Switch on ItemData.ItemType
-    │
-    ├─ Throwable → HandleThrowablePickUp(NewOwner)
-    ├─ Buff → HandleBuffPickUp(NewOwner)
-    └─ Resource → HandleResourcePickUp(NewOwner)
+NewOwner != Instigator?
+    ├─ False → 返回（防止 Instigator 拾取自己掉落的道具）
+    └─ True ↓
+        Switch on ItemData.ItemType
+            │
+            ├─ Throwable → HandleThrowablePickUp(NewOwner)
+            ├─ Buff → HandleBuffPickUp(NewOwner)
+            └─ Resource → HandleResourcePickUp(NewOwner)
 
 HandleThrowablePickUp:
     → GetComponentByClass(Comp_Character_Endurance)
@@ -292,7 +295,7 @@ Tween Float Async Task (Start=0, End=BobHeight, Duration=BobTime, Ease=InOutSine
 **HandleInFieldOverlap**：
 ```
 Cast OtherActor to BP_Character_Game
-    ├─ 成功 → OnPickUp(Character)
+    ├─ 成功 → OtherActor != Instigator? → OnPickUp(Character)
     └─ 失败 → 忽略
 ```
 
@@ -322,11 +325,13 @@ IsValid(Task_Spin) → Task_Spin.Stop()
 ```
 
 
-**HandleFlyOverlap**：
+**HandleFlyOverlap** ✅：
 ```
 HandleFlyOverlap(OtherActor)
     ↓
-OnHit(ContextItem, OtherActor)  ← 虚函数，子类重写
+Cast OtherActor to BP_Item_Base
+    ├─ 成功（碰到其他道具）→ 忽略
+    └─ 失败（碰到角色/地面）→ OnHit(ContextItem, OtherActor)
 ```
 
 **On State End**：
@@ -372,7 +377,7 @@ OnTrap(TrappedCharacter)
     Switch Has Authority
         └─ Authority ↓
     Call OnTrapTriggered(TrappedCharacter)
-    Send Gameplay Event (Gameplay.Event.Activate.Stagger)
+    Send Gameplay Event (Gameplay.Event.Activate.Stagger.Push)
     Destroy Actor
 ```
 
@@ -388,9 +393,12 @@ Bound Event OnComponentBeginOverlap (DetectionBox)
 Cast OtherActor to BP_Character_Game
     ├─ 失败 → 忽略
     └─ 成功 ↓
-Is Locally Controlled?  ← 只对本地玩家显示高亮
+OtherActor != Instigator?
     ├─ False → 返回
-    └─ True → SetHighlight(true)
+    └─ True ↓
+        Is Locally Controlled?
+            ├─ False → 返回
+            └─ True → SetHighlight(true)
 ```
 
 ### DetectionBox - OnEndOverlap
@@ -401,9 +409,12 @@ Bound Event OnComponentEndOverlap (DetectionBox)
 Cast OtherActor to BP_Character_Game
     ├─ 失败 → 忽略
     └─ 成功 ↓
-Is Locally Controlled?
+OtherActor != Instigator?
     ├─ False → 返回
-    └─ True → SetHighlight(false)
+    └─ True ↓
+        Is Locally Controlled?
+            ├─ False → 返回
+            └─ True → SetHighlight(false)
 ```
 
 

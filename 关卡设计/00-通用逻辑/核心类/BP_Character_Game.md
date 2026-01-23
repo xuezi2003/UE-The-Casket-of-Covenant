@@ -29,6 +29,14 @@
 >
 > 否则 Server 上的动画不会更新，导致骨骼位置与 Client 不同步（如蹲行时 head 骨骼高度不变）。
 
+> [!IMPORTANT]
+> **Ragdoll 物理配置**：为了支持死亡 Ragdoll 效果，必须配置：
+> - **Physics Asset**: SK_Bandit_PhysicsAsset（或对应骨骼的 PhysicsAsset）
+> - **Collision Enabled**: 纯查询（无物理碰撞）← 默认设置，死亡时由代码改为 QueryAndPhysics
+> - **Collision Preset**: CharacterMesh
+>
+> 死亡时通过 `Multicast_OnDeath` 动态启用物理碰撞，详见 [Comp_Character_Endurance.md](../../01-耐力之匣/架构/Comp_Character_Endurance.md#multicast_ondeath-custom-event-)
+
 ## 前方检测框（DetectionBox）设计（待实现）
 
 **用途**：检测角色前方可交互对象（其他玩家、道具）
@@ -71,11 +79,48 @@
 
 | 事件 | 处理 |
 |------|------|
-| Event BeginPlay | → Wait for Player State → 设置 0.1s 循环定时器 |
-| WaitForPlayerState | → Cast To PS_FiveBox → 成功后 InitPlayer → InitWaitAttributeChanged → 清除定时器 |
+| Event BeginPlay | → 设置循环定时器调用 WaitForPlayerState |
+| WaitForPlayerState | → Cast To PS_FiveBox → 成功后 InitPlayer → 清除定时器 |
 | HandleAvatarChange | → Update Player Avatar |
 | HandleNumChange | → Update Player Num |
 | OnAttributeChange | → Switch on Gameplay Attribute → HandleSpeedRateChanged |
+
+### Event BeginPlay ✅
+
+```blueprint
+Event BeginPlay
+    ↓
+K2_SetTimerDelegate(
+    Event = Delegate(WaitForPlayerState on self),
+    Time = GetWorldDeltaSeconds(),
+    bLooping = true
+)
+    ↓
+SET WaitPSHandle = TimerHandle
+```
+
+**说明**：使用定时器循环检查 PlayerState 是否已生成，避免在 BeginPlay 时 PlayerState 为空。
+
+### WaitForPlayerState（Custom Event）✅
+
+```blueprint
+Event WaitForPlayerState
+    ↓
+Cast (PlayerState) To PS_FiveBox
+    ↓ Success
+    K2_ClearAndInvalidateTimerHandle(WaitPSHandle)
+    ↓
+    InitPlayer(NewPS = PS_FiveBox)
+    ↓
+    Switch Has Authority → Authority:
+        ↓
+        HandlePlayerRecord()  ← 绑定淘汰/完成事件监听
+```
+
+**说明**：
+- 成功获取 PS_FiveBox 后清除定时器
+- 调用 InitPlayer 初始化角色
+- **仅在 Server 上调用 HandlePlayerRecord**，绑定档案管理事件监听
 
 ## 属性变化处理（双重保险方案）
 
@@ -141,6 +186,106 @@ SpeedRate → 调用 HandleSpeedRateChanged
 | IA_Core_Look | → Aim 函数 |
 | IA_Core_Move | → Move 函数 |
 | IA_Core_Jump | Started → GA_Jump（通过 AbilitySet 输入绑定触发） |
+
+## 玩家档案管理 ✅
+
+Character 在 Server 上监听自己的淘汰/完成事件，统一处理档案更新和关卡检查。
+
+### HandlePlayerRecord（Custom Event）✅
+
+**类型**：Custom Event  
+**执行条件**：Server Only（在 WaitForPlayerState 中通过 Switch Has Authority 调用）
+
+在 Character 初始化时绑定淘汰/完成事件监听：
+
+```blueprint
+Event HandlePlayerRecord
+    ↓
+Sequence
+    ├─ then_0: AsyncAction: Wait for Gameplay Event to Actor
+    │   ├─ Target: Self
+    │   ├─ Event Tag: Gameplay.Event.Player.Eliminated
+    │   └─ Event Received → HandlePlayerEliminate(Character = Self)
+    │
+    └─ then_1: AsyncAction: Wait for Gameplay Event to Actor
+        ├─ Target: Self
+        ├─ Event Tag: Gameplay.Event.Player.Finished
+        └─ Event Received → HandlePlayerFinish(Character = Self)
+```
+
+**说明**：
+- 只在 Server 上执行（通过 Switch Has Authority 保证）
+- 使用 Sequence 节点并行创建两个 AsyncAction 监听器
+- 监听自己（Self）的事件，生命周期与 Character 一致
+- 真人和 AI 使用相同的逻辑
+
+**调用位置**：WaitForPlayerState（获取到 PS 后调用 InitPlayer，然后在 Server 上调用此函数）
+
+---
+
+### HandlePlayerEliminate（函数）✅
+
+**类型**：函数  
+**输入参数**：Character (Character)
+
+统一处理玩家淘汰逻辑（档案管理 + 关卡检查）：
+
+```blueprint
+Event HandlePlayerEliminate (Character: Character)
+    ↓
+GetPlayerState() → ToPSFivebox(PlayerState)
+    ↓
+PS_FiveBox.Get PlayerNum
+    ↓
+GI_FiveBox.SetPlayerEliminate(EliminatePlayerNum = PlayerNum)
+    ↓
+Cast(GetGameState()) To GS_Core
+    ↓
+GS_Core.CheckLevelShouldEnd()
+```
+
+**说明**：
+- 从 PlayerState 获取 PlayerNum
+- 调用 GI_FiveBox.SetPlayerEliminate 记录淘汰状态
+- 调用 GS_Core.CheckLevelShouldEnd 触发关卡结束检查
+- 真人和 AI 使用相同的处理逻辑
+
+**触发来源**：Comp_Character_Endurance.HandleHealthChanged 发送 Gameplay.Event.Player.Eliminated 事件
+
+---
+
+### HandlePlayerFinish（函数）✅
+
+**类型**：函数  
+**输入参数**：Character (Character)
+
+统一处理玩家完成逻辑（档案管理 + 关卡检查）：
+
+```blueprint
+Event HandlePlayerFinish (Character: Character)
+    ↓
+GetPlayerState() → ToPSFivebox(PlayerState)
+    ↓
+PS_FiveBox.Get PlayerNum
+    ↓
+GI_FiveBox.SetPlayerFinished(FinishPlayerNum = PlayerNum)
+    ↓
+PrintText("【character】{PlayerNum} 完成了比赛")
+    ↓
+Cast(GetGameState()) To GS_Core
+    ↓
+GS_Core.CheckLevelShouldEnd()
+```
+
+**说明**：
+- 从 PlayerState 获取 PlayerNum
+- 调用 GI_FiveBox.SetPlayerFinished 记录完成状态
+- 调用 GS_Core.CheckLevelShouldEnd 触发关卡结束检查
+- 真人和 AI 使用相同的处理逻辑
+
+**触发来源**：BP_FinishLine.OnComponentEndOverlap 发送 Gameplay.Event.Player.Finished 事件
+
+---
 
 ## 函数
 

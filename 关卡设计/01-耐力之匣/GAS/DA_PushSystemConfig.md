@@ -24,14 +24,14 @@
 | 配置 | 值 |
 |------|-----|
 | Target Type | GSCTargetTypeUseOwner |
-| GE | GE_Staggered |
+| GE | GE_Staggered, GE_StopMove |
 | SetByCaller | 无 |
 
 ### FallEffectContainer
 | 配置 | 值 |
 |------|-----|
 | Target Type | GSCTargetTypeUseOwner |
-| GE | GE_Fallen |
+| GE | GE_Fallen, GE_StopMove |
 | SetByCaller | 无 |
 
 ### DodgeEffectContainer

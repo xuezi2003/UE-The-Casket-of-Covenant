@@ -63,9 +63,9 @@ Return Spawned Pawn
 - AbilitySet 也在 InitPlayer 里通过 GiveAbilitySet 赋予
 - GM 只负责传入配置参数
 
-### Event OnPostLogin（玩家登录）✅ 已更新
+### Event OnPostLogin（玩家登录）✅
 
-在玩家登录时添加档案 + 绑定事件监听：
+在玩家登录时添加档案：
 
 ```blueprint
 Event OnPostLogin (NewPlayer: PlayerController)
@@ -78,17 +78,14 @@ Sequence
     │
     └─ then_1: [原有逻辑] 添加玩家档案
         Make S Player Record → GI_FiveBox.AddPlayerRecord
-        ↓
-        Cast (NewPlayer.GetPawn()) To BP_Character_Game
-        ↓
-        HandlePlayerLogin(Character)  ← 新增：为玩家绑定事件监听
 ```
 
 **说明**：
-- 旧逻辑保持不变（获取 PlayerNum/AvatarData → 添加档案）
-- 新增 HandlePlayerLogin 调用，为真人玩家绑定淘汰/完成事件监听
+- 获取 PlayerNum 和 AvatarData
+- 添加玩家档案到 GI_FiveBox.PlayerRecords
+- **不再需要绑定事件监听**（已移至 BP_Character_Game.HandlePlayerRecord）
 
-### RestoreAISurvivors（还原存活 AI）✅ 已更新
+### RestoreAISurvivors（还原存活 AI）✅
 
 ```blueprint
 For Each (GI_FiveBox.PlayerRecords)
@@ -96,17 +93,16 @@ For Each (GI_FiveBox.PlayerRecords)
 条件：!IsHuman && !IsEliminated
     ↓ True
     ├─ SpawnActor BP_Character_Game（传入 LevelCharacterComponentClass/LevelIMC/LevelAbilitySet）
-    ├─ HandlePlayerLogin(SpawnedActor)  ← 新增：为 AI 绑定事件监听
     ├─ SpawnActor AIC_Core
     ├─ Possess(Character)
     └─ 从档案注入 PlayerNum/AvatarData 到 PS
 ```
 
 **说明**：
-- 在 SpawnActor 后立即调用 HandlePlayerLogin，确保 AI 也能绑定事件监听
-- AI 到达终点或死亡时，档案会被正确记录
+- 还原存活的 AI
+- **不再需要调用 HandlePlayerLogin**（Character 自己在 BeginPlay 时绑定监听）
 
-### FillAIPlayers（AI 填充）✅ 已更新
+### FillAIPlayers（AI 填充）✅
 
 ```blueprint
 NeedAICnt = NeedPlayerCnt - LENGTH(PlayerRecords)
@@ -114,7 +110,6 @@ NeedAICnt = NeedPlayerCnt - LENGTH(PlayerRecords)
 For Loop (1 to NeedAICnt)
     ↓ LoopBody
     ├─ SpawnActor BP_Character_Game（传入 LevelCharacterComponentClass/LevelIMC/LevelAbilitySet）
-    ├─ HandlePlayerLogin(SpawnedActor)  ← 新增：为 AI 绑定事件监听
     ├─ SpawnActor AIC_Core
     ├─ Possess(Character)
     ├─ GetUniquePlayerNum → 设置 PlayerNum
@@ -123,120 +118,11 @@ For Loop (1 to NeedAICnt)
 ```
 
 **说明**：
-- 在 SpawnActor 后立即调用 HandlePlayerLogin，确保 AI 也能绑定事件监听
-- AI 到达终点或死亡时，档案会被正确记录
+- 填充 AI 到目标人数
+- **不再需要调用 HandlePlayerLogin**（Character 自己在 BeginPlay 时绑定监听）
 
 ### GetSpawnPos（虚函数）
 子类重写，返回关卡出生区域坐标。
-
----
-
-## 玩家淘汰与完成管理 ✅ 已实现
-
-GM_Core 统一管理所有玩家（真人 + AI）的淘汰和完成逻辑。
-
-### HandlePlayerLogin（Custom Event）✅ 已实现
-
-**类型**：Custom Event  
-**输入参数**：NewPlayer (BP_Character_Game)
-
-在玩家登录或 AI 生成时，为其绑定淘汰/完成事件监听：
-
-```blueprint
-Event HandlePlayerLogin (NewPlayer: BP_Character_Game)
-    ↓
-Sequence
-    ├─ then_0: AsyncAction: Wait for Gameplay Event to Actor
-    │   ├─ Target: NewPlayer
-    │   ├─ Event Tag: Gameplay.Event.Player.Eliminated
-    │   └─ On Event Received → HandlePlayerEliminate(NewPlayer)
-    │
-    └─ then_1: AsyncAction: Wait for Gameplay Event to Actor
-        ├─ Target: NewPlayer
-        ├─ Event Tag: Gameplay.Event.Player.Finished
-        └─ On Event Received → HandlePlayerFinish(NewPlayer)
-```
-
-**说明**：
-- 真人和 AI 都会调用此函数，逻辑统一
-- 使用 Sequence 节点并行执行两个 Async Action
-- 监听的是 Character 的事件，不区分真人和 AI
-- 当 Character 发送淘汰/完成事件时，自动调用对应的处理函数
-
-**调用位置**：
-- OnPostLogin：真人玩家登录后调用
-- RestoreAISurvivors：还原存活 AI 后调用
-- FillAIPlayers：填充 AI 后调用
-
----
-
-### HandlePlayerEliminate（Custom Event）✅ 已实现
-
-**类型**：Custom Event  
-**输入参数**：Character (BP_Character_Game)
-
-统一处理所有玩家的淘汰逻辑（档案管理 + 关卡检查）：
-
-```blueprint
-Event HandlePlayerEliminate (Character: BP_Character_Game)
-    ↓
-Get Player State (from Character)
-    ↓
-Cast to PS_FiveBox
-    ↓ Success → Get PlayerNum
-    ↓
-BPL_Game_Core.GetGIFiveBox()
-    ↓
-Call SetPlayerEliminated (EliminatedPlayerNum = PlayerNum)
-    ↓
-Cast (GetGameState()) To GS_Core
-    ↓
-Call CheckLevelShouldEnd()
-```
-
-**说明**：
-- 从 Character 获取 PlayerState，再获取 PlayerNum
-- 调用 GI_FiveBox.SetPlayerEliminated 记录淘汰状态
-- 调用 GS_Core.CheckLevelShouldEnd 触发关卡结束检查
-- 真人和 AI 使用相同的处理逻辑
-
-**触发来源**：
-- Comp_Character_Endurance.HandleHealthChanged 发送 Gameplay.Event.Player.Eliminated 事件
-
----
-
-### HandlePlayerFinish（Custom Event）✅ 已实现
-
-**类型**：Custom Event  
-**输入参数**：Character (BP_Character_Game)
-
-统一处理所有玩家的完成逻辑（档案管理 + 关卡检查）：
-
-```blueprint
-Event HandlePlayerFinish (Character: BP_Character_Game)
-    ↓
-Get Player State (from Character)
-    ↓
-Cast to PS_FiveBox
-    ↓ Success → Get PlayerNum
-    ↓
-BPL_Game_Core.GetGIFiveBox()
-    ↓
-Call SetPlayerFinished (FinishedPlayerNum = PlayerNum)
-    ↓
-Cast (GetGameState()) To GS_Core
-    ↓
-Call CheckLevelShouldEnd()
-```
-
-**说明**：
-- 从 Character 获取 PlayerState，再获取 PlayerNum
-- 调用 GI_FiveBox.SetPlayerFinished 记录完成状态
-- 调用 GS_Core.CheckLevelShouldEnd 触发关卡结束检查
-- 真人和 AI 使用相同的处理逻辑
-
-**触发来源**：
-- BP_FinishLine.OnComponentEndOverlap 发送 Gameplay.Event.Player.Finished 事件
 
 ---
 

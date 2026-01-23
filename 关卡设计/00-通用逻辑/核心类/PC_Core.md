@@ -45,8 +45,8 @@ Sequence
 **设计说明**：
 - 组件仅在服务端添加，通过复制系统同步到客户端
 - 具体组件类由 GM 子类配置（如 GM_Endurance 配置 Comp_PC_Endurance）
-- **事件监听架构**：GM_Core 和 PC_Core 都监听 Character 的淘汰/完成事件（事件多播模式）
-  - GM_Core 负责：档案管理 + 关卡检查
+- **事件监听架构**：BP_Character_Game 和 PC_Core 都监听 Character 的淘汰/完成事件（事件多播模式）
+  - BP_Character_Game 负责：档案管理 + 关卡检查（Server Only）
   - PC_Core 负责：真人玩家的特殊逻辑（UnPossess + 返回主菜单）
 
 ### HandlePlayerEliminate（Custom Event）⚠️ 部分实现
@@ -80,8 +80,8 @@ If (IsHuman)
 
 **设计说明**：
 - PC_Core 只负责真人玩家的特殊逻辑（UnPossess、返回主菜单）
-- **档案管理和关卡检查由 GM_Core 统一处理**
-- 事件监听由 GM_Core.HandlePlayerLogin 绑定
+- **档案管理和关卡检查由 BP_Character_Game 统一处理**
+- 事件监听由 BP_Character_Game.HandlePlayerRecord 绑定（Server Only）
 
 **触发来源**：
 - PC_Core.OnPossess 中绑定的事件监听（监听 Gameplay.Event.Player.Eliminated）
@@ -99,7 +99,7 @@ Event HandlePlayerFinish
 
 **设计说明**：
 - 此函数已清空，不再处理档案管理和关卡检查
-- **档案管理和关卡检查由 GM_Core 统一处理**
+- **档案管理和关卡检查由 BP_Character_Game 统一处理**
 - 如果未来需要真人玩家的特殊完成逻辑，可以在此添加
 
 **触发来源**：
@@ -147,4 +147,4 @@ PC_Core
 - [UI 架构概述](../UI/架构概述.md) - UI 分层设计
 - [输入系统.md](../输入系统.md) - 输入分层架构
 - [Comp_PC_Endurance.md](../../01-耐力之匣/架构/Comp_PC_Endurance.md) - 关卡1 PC 组件
-- [GM_Core.md](GM_Core.md) - 淘汰/完成事件监听和档案管理
+- [BP_Character_Game.md](BP_Character_Game.md) - 淘汰/完成事件监听和档案管理
