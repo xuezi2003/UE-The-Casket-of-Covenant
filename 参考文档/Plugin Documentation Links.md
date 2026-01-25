@@ -59,6 +59,167 @@ GSCUserWidget / GSCUWHud 提供以下可覆盖事件：
 2. **自定义 Widget**：继承 `GSCUserWidget`，完全手动处理
 3. **BindWidget 规则**：控件名必须**完全匹配**（区分大小写）
 
+### AI 行为树集成
+
+> **文档来源**: https://gascompanion.github.io/working-with-ai/
+
+#### 内置 BTTask
+
+| Task 名称 | 用途 | 配置 |
+|-----------|------|------|
+| `BTTask_TriggerAbilityByClass` | 通过 Ability Class 激活技能 | 指定 Ability Class（如 GA_Sprint） |
+| `BTTask_TriggerAbilityByTags` | 通过 Gameplay Tags 激活技能 | 指定 Tag Container（如 `Ability.Melee`） |
+
+**关键特性**：
+- 两个 Task 都会自动绑定 `GSCGameplayAbility.OnAbilityEnded` 委托
+- 技能结束时自动调用 `FinishExecute`，无需手动处理等待逻辑
+- 支持远程激活（`bAllowRemoteActivation`）
+
+#### GSCGameplayAbility 特性
+
+> **API 文档**: https://gascompanion.github.io/api/Abilities/GSCGameplayAbility/
+
+| 特性 | 说明 |
+|------|------|
+| `OnAbilityEnded` 委托 | 蓝图可绑定的委托，技能结束时触发（用于 BTTask 等待） |
+| `bActivateOnGranted` | 自动激活（被动技能） |
+| `bLooselyCheckAbilityCost` | 宽松的消耗检查（允许负值） |
+| `EffectContainerMap` | 通过 Tag 管理 GE 容器 |
+
+#### GSCCoreComponent 事件
+
+> **API 文档**: https://gascompanion.github.io/api/Components/GSCCoreComponent/
+
+| 事件 | 参数 | 用途 |
+|------|------|------|
+| `OnAttributeChange` | Attribute, DeltaValue, EventTags | 任何属性变化时触发 |
+| `OnAbilityActivated` | Ability | 技能激活时 |
+| `OnAbilityEnded` | Ability | 技能结束时 |
+| `OnGameplayTagChange` | GameplayTag, NewTagCount | 标签添加/移除时 |
+
+#### ASC 获取方式
+
+- **蓝图**：使用 `Get Ability System Component` 节点会自动处理 PlayerState 的情况
+- **C++**：`UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor)`
+- 无需手动区分 ASC 在 Pawn 还是 PlayerState 上
+
+### Ability Sets（技能集管理）
+
+> **文档来源**: https://gascompanion.github.io/ability-sets/
+
+**用途**：通过 Data Asset 统一管理一组 Abilities、Attributes、Effects 和 Owned Tags
+
+#### 创建方式
+Content Browser → 右键 → Miscellaneous → Data Asset → 选择 `GSCAbilitySet`
+
+#### API 方法
+
+| 方法 | 说明 | 调用位置 |
+|------|------|----------|
+| `GiveAbilitySet()` | 赋予技能集，返回 Handle | Server + Client（用于输入绑定） |
+| `ClearAbilitySet()` | 移除技能集（通过 Handle） | Server + Client |
+
+**典型使用场景**：
+- 装备武器/道具时赋予技能集
+- 卸载武器/道具时清除技能集
+- 关卡切换时更换技能集
+
+**注意事项**：
+- 需要 `GSCAbilityInputBindingComponent` 才能绑定输入
+- PlayerState ASC 需要在 `OnInitAbilityActorInfo` 中调用
+- 非 PlayerState ASC 可以在 `BeginPlay` 中调用
+
+### Ability Queue System（技能队列系统）
+
+> **文档来源**: https://gascompanion.github.io/ability-queue-system/
+
+**用途**：允许在技能执行期间缓冲下一个技能，提升操作响应性（类似魂系游戏）
+
+#### 工作原理
+- 监听技能激活失败（通常因为 Blocking Tags）
+- 存储失败的技能引用
+- 当前技能结束时，自动尝试激活队列中的技能
+
+#### 启用方式
+
+**方式1：动画通知（推荐）**
+- 在 Anim Montage 中添加 `AbilityQueueWindow` Notify State
+- 配置允许队列的技能列表或允许所有技能
+- 精确控制队列窗口的开启/关闭时机
+
+**方式2：Ability 属性**
+- 在 `GSCGameplayAbility` 中勾选 `bEnableAbilityQueue`
+- 技能激活时自动开启队列，结束时关闭
+- 允许所有技能进入队列
+
+#### 必需组件
+- Pawn/Character 必须添加 `GSCAbilityQueueComponent`
+
+#### 调试命令
+```
+GASCompanion.Debug.AbilityQueue
+```
+
+### Loosely Check Ability Cost（宽松消耗检查）
+
+> **文档来源**: https://gascompanion.github.io/ignore-ability-cost/
+
+**用途**：允许技能在资源不足时仍可激活，资源可进入负值（类似黑魂体力机制）
+
+#### 配置方式
+在 `GSCGameplayAbility` 中勾选 `bLooselyCheckAbilityCost`
+
+#### 行为差异
+
+| 模式 | 激活条件 | 结果 |
+|------|----------|------|
+| 默认 | 资源 >= 消耗值 | 资源不足时无法激活 |
+| 宽松检查 | 资源 > 0 | 可激活，资源可进入负值 |
+
+**注意**：默认属性会被 Clamp 在 0，如需负值需在 AttributeSet 的 `PostGameplayEffectExecute` 中处理
+
+### Modular Character 类型
+
+> **文档来源**: https://gascompanion.github.io/working-with-ai/
+
+| 类型 | ASC 位置 | 适用场景 |
+|------|----------|----------|
+| `GSCModularCharacter` | Pawn | AI 角色（不需要 PlayerState） |
+| `GSCModularPlayerStateCharacter` | PlayerState | 玩家角色（需要跨 Pawn 持久化） |
+| `GSCModularPawn` | Pawn | 简单 Pawn（不需要 PlayerState） |
+
+**项目使用**：`BP_Character_Game` 继承自 `GSCModularPlayerStateCharacter`，真人和 AI 共用
+
+### Replication Mode（复制模式）
+
+| 模式 | 复制内容 | 适用场景 |
+|------|----------|----------|
+| **Full** | 所有 GE 复制到所有客户端 | 单人游戏 |
+| **Mixed** | GE 只复制给 Owner，Tags/Cues 复制给所有人 | 多人游戏 - 玩家控制 |
+| **Minimal** | 只复制 Tags/Cues | 多人游戏 - AI 控制 |
+
+**项目配置**：应使用 Mixed 模式（玩家控制的角色）
+
+### Enhanced Input Integration
+
+> **文档来源**: https://gascompanion.github.io/api/Components/GSCAbilityInputBindingComponent/
+
+**核心组件**：`GSCAbilityInputBindingComponent`
+
+#### 关键方法
+
+| 方法 | 用途 |
+|------|------|
+| `SetInputBinding()` | 为 Ability 设置输入绑定 |
+| `ClearInputBinding()` | 清除 Ability 的输入绑定 |
+| `GetBoundInputActionForAbility()` | 获取 Ability 绑定的 InputAction |
+
+#### Trigger Event 类型
+- **Started**：按下瞬间触发（推荐，用于单次动作）
+- **Triggered**：每帧触发（慎用，可能导致问题）
+
+**注意**：InputBindingComponent 只能添加到 Pawn 上，不能添加到 PlayerState
+
 ---
 
 ## Blueprint Attributes
@@ -285,4 +446,25 @@ FAB 集成后，Megascans 纹理工作流发生变化：
     - **性能优化**: 可调节碰撞厚度、迭代次数及自碰撞开关。
     - **自定义纹理**: 提供 UV 模板，支持通过外部图像编辑器创建自定义旗帜图案。
 - **UE 5.2 更新内容**: 优化了采样器使用，解决了 UE 5.2+ 材质采样器上限问题。
+
+---
+
+## Unreal Engine Behavior Tree（官方文档）
+- **官方文档**: https://dev.epicgames.com/documentation/en-us/unreal-engine/behavior-tree-in-unreal-engine---overview
+- **用途**: UE 原生 AI 行为树系统
+- **详细指南**: [UE Behavior Tree 参考](./Plugins/UE Behavior Tree 参考.md)
+
+### 核心特性
+
+- **事件驱动架构**：不是每帧检查，而是被动监听事件触发
+- **执行顺序**：从左到右、从上到下执行
+- **Decorator**：条件装饰器，决定分支或节点是否可执行
+- **Service**：定期执行更新，替代传统 Parallel 节点
+- **Observer Aborts**：监听值变化并中断执行
+
+### 重要限制
+
+1. **Root 节点限制**: Root 节点不支持添加 Decorator 和 Service，必须添加在子节点上
+2. **Random Decorator**: UE 没有内置 Random Decorator，需要自定义创建
+3. **Check Gameplay Tag Condition**: 不支持 Observer Aborts 参数，Gameplay Tag 变化会自动触发重新评估
 

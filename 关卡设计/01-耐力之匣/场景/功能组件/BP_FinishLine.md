@@ -53,6 +53,15 @@ BP_FinishLine
     ├── Decal_Line - 地面终点线贴花
     ├── TriggerBox (BoxComponent)
     │   ├── Collision: Custom（自定义碰撞）
+    │   ├── Generate Overlap Events: true
+    │   └── Can Ever Affect Navigation: ❌（不影响导航）
+    └── TextRender - 终点线文字
+```
+BP_FinishLine
+└── Scene
+    ├── Decal_Line - 地面终点线贴花
+    ├── TriggerBox (BoxComponent)
+    │   ├── Collision: Custom（自定义碰撞）
     │   └── Generate Overlap Events: true
     └── TextRender - 终点线文字
 ```

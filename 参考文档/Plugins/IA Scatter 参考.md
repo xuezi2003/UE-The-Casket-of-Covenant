@@ -19,8 +19,8 @@
 | `display static mesh proxies` | bool | 显示代理网格替代原始静态网格 |
 | `use hierarchical instances` | bool | 使用分层实例，适合带 LOD 的静态网格（Nanite 网格不需要） |
 | `no tracing` | bool | 不计算追踪，在追踪起点直接生成实例 |
-| `execute ia scatter at runtime` | bool | 运行时执行 ia scatter |
-| `randomize seed at runtime` | bool | 运行时随机化种子 |
+| `execute ia scatter at runtime` | bool | 运行时执行 ia scatter **⚠️ 多人游戏警告：不兼容网络同步** |
+| `randomize seed at runtime` | bool | 运行时随机化种子 **⚠️ 多人游戏警告：不兼容网络同步** |
 | `refresh ia scatter every frame` | bool | 每帧刷新，用于过场动画中 Sequencer 动画参数或动画表面 |
 | `runtime execution delay` | double | 运行时执行延迟 |
 

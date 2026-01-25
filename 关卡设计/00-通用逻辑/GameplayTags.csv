@@ -33,6 +33,7 @@ Player.State.Buffed.Lightning,Player.State.Buffed.Lightning,"闪电Buff：速度
 Player.State.Buffed.Shield,Player.State.Buffed.Shield,"护盾Buff：抵消攻击"
 Player.State.Dead,Player.State.Dead,"死亡状态"
 Player.State.Attacked,Player.State.Attacked,"受击状态（由 GE_Attacked 赋予）"
+Player.State.Started,Player.State.Started,"已开始状态（穿过起点线后）"
 Player.State.Finished,Player.State.Finished,"已到达终点（由 GE_Finished 赋予）"
 Effect,Effect,"GAS 效果相关标签的根标签"
 Effect.Container,Effect.Container,"Effect Container 标签（用于 GSC Apply Effect Container）"

@@ -33,7 +33,7 @@ Event On Possess → Run Behavior Tree (BT_Asset)
 
 | 行为树 | 关卡 | AI 行为 |
 |--------|------|---------|
-| BT_Endurance | 1 | 向终点移动、红灯停绿灯跑、奔跑/蹲行/跳跃、推搡、闪避、失衡QTE判定、道具使用 |
+| BT_Endurance | 1 | 走走停停地移动、红灯停/偷偷动、推搡/闪避、失衡QTE判定（详见 [BT_Endurance.md](../../01-耐力之匣/AI/BT_Endurance.md)） |
 | BT_Logic | 2 | 随机选房间、跟随多数人 |
 | BT_Courage | 3 | 按概率戴面具 |
 | BT_Insight | 4 | 随机站队 |

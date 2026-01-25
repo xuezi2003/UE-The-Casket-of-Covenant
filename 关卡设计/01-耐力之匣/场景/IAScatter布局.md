@@ -42,10 +42,12 @@
   - **随机旋转**：Z 轴 `±45.0°`
   - **随机缩放**：`1.0 - 1.2`
   - **Overlapping**：`method 2`
-  - **Randomize Seed At Runtime**：`✅ 开启`（每次运行布局不同）
+  - **Randomize Seed At Runtime**：`❌ 关闭`（多人游戏兼容性要求）
+  - **Execute ia Scatter At Runtime**：`❌ 关闭`（多人游戏兼容性要求）
 - **备注**：
   - [BP_Obstacle](装饰组件/BP_Obstacle.md) 会在 Construction Script 中随机切换成"课桌"或"椅子"。
   - 此实例是玩家躲避 [BP_Monitor](木偶与监视器/BP_Monitor.md) 视线的主要遮挡物来源。
+  - 运行时选项已关闭以确保所有客户端看到相同的障碍物布局。
 
 ---
 
@@ -59,10 +61,12 @@
   - **缩放范围**：`1.2 - 2.0`
   - **避让逻辑**：`Do Not Populate On Tags: Prop`
   - **Overlapping**：`method 1`
-  - **Randomize Seed At Runtime**：`✅ 开启`（每次运行布局不同）
+  - **Randomize Seed At Runtime**：`❌ 关闭`（多人游戏兼容性要求）
+  - **Execute ia Scatter At Runtime**：`❌ 关闭`（多人游戏兼容性要求）
 - **备注**：
   - 用于铺设散落文具，增加"考试废墟"的氛围感。
   - 通过 `Prop` 标签避让大型物件，使其更多分布在空地。
+  - 运行时选项已关闭以确保所有客户端看到相同的装饰布局。
 
 ---
 
@@ -77,10 +81,12 @@
   - **核心区域**：`2060 x 1321`
   - **最小间距**：`250.0`
   - **生成目标**：[BP_Section_Floor](结构组件/BP_Section_Floor.md)
-  - **Randomize Seed At Runtime**：`✅ 开启`（每次运行道具分布不同）
+  - **Randomize Seed At Runtime**：`❌ 关闭`（多人游戏兼容性要求）
+  - **Execute ia Scatter At Runtime**：`❌ 关闭`（多人游戏兼容性要求）
 - **备注**：
   - 这是游戏核心 [道具系统](../道具/道具系统.md) 的投放源。
   - 通过 `Method 2` 进行重叠检测。
+  - 运行时选项已关闭以确保所有客户端看到相同的道具分布。
 
 ---
 

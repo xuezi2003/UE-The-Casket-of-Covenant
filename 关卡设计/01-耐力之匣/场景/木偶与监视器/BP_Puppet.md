@@ -23,6 +23,16 @@ BP_Puppet 是场景中放置的 Actor，DS 和 Client 各自有独立实例，�
 |------|------|------|
 | SkeletalMesh | Skeletal Mesh Component | 木偶骨骼网格（Rotation Z = -90°，使模型面向 +X 轴） |
 
+## 导航网格配置 ✅
+
+| 配置项 | 值 | 说明 |
+|--------|:--:|------|
+| **Can Ever Affect Navigation** | ✅ | 影响导航网格生成 |
+| **Collision Preset** | BlockAllDynamic | 对所有通道阻挡 |
+| **Collision Enabled** | Query and Physics | 启用碰撞查询和物理 |
+
+**效果**：NavMesh 会在木偶周围挖空洞，AI 无法穿过木偶位置（木偶在终点线后方，符合设计）。
+
 ## 变量
 
 | 变量名 | 类型 | 说明 |

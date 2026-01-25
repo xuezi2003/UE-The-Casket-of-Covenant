@@ -141,6 +141,8 @@ If (GetFloatAttributeFromAbilitySystemComponent(ASC, BAS_Core.Health) <= 0
 Event HandlePlayerStart
     ↓
 BP_Character.CapsuleComponent.SetCollisionObjectType(PawnBlock)
+    ↓
+ASC.BP_ApplyGameplayEffectToSelf(GE_Started)
 ```
 
 ---
