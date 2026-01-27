@@ -465,6 +465,12 @@ FAB 集成后，Megascans 纹理工作流发生变化：
 ### 重要限制
 
 1. **Root 节点限制**: Root 节点不支持添加 Decorator 和 Service，必须添加在子节点上
-2. **Random Decorator**: UE 没有内置 Random Decorator，需要自定义创建
-3. **Check Gameplay Tag Condition**: 不支持 Observer Aborts 参数，Gameplay Tag 变化会自动触发重新评估
+2. **Root 直接子节点限制**: Root 的直接子节点上的 Decorator 也会被忽略！必须在 Root 和逻辑节点之间添加中间层（Sequence 或 Selector）
+3. **Random Decorator**: UE 没有内置 Random Decorator，需要自定义创建
+4. **Check Gameplay Tag Condition**: 不支持 Observer Aborts 参数，Gameplay Tag 变化会自动触发重新评估
+
+### 参考链接
+
+- **Node Reference**: https://dev.epicgames.com/documentation/en-us/unreal-engine/behavior-tree-node-reference-in-unreal-engine
+- **Quick Start Guide**: https://dev.epicgames.com/documentation/en-us/unreal-engine/behavior-tree-in-unreal-engine---quick-start-guide
 

@@ -60,7 +60,7 @@
 
 | 变量名 | 类型 | 复制 | 用途 |
 |--------|------|------|------|
-| PS | PS_FiveBox | ❌ | 缓存的 PlayerState 引用 |
+| MyPS | PS_FiveBox | ❌ | 缓存的 PlayerState 引用 |
 | LevelCharacterComponentClass | Actor Component Class | ✅ | 关卡专属组件类（Spawn 时传入） |
 | LevelIMC | Input Mapping Context | ✅ RepNotify | 关卡专属输入映射（Spawn 时传入，通过 OnRep 设置） |
 | LevelAbilitySet | GSCAbilitySet | ✅ | 关卡专属技能集（Spawn 时传入） |
@@ -237,7 +237,7 @@ GetPlayerState() → ToPSFivebox(PlayerState)
     ↓
 PS_FiveBox.Get PlayerNum
     ↓
-GI_FiveBox.SetPlayerEliminate(EliminatePlayerNum = PlayerNum)
+GI_FiveBox.SetPlayerEliminated(EliminatePlayerNum = PlayerNum)
     ↓
 Cast(GetGameState()) To GS_Core
     ↓
@@ -246,7 +246,7 @@ GS_Core.CheckLevelShouldEnd()
 
 **说明**：
 - 从 PlayerState 获取 PlayerNum
-- 调用 GI_FiveBox.SetPlayerEliminate 记录淘汰状态
+- 调用 GI_FiveBox.SetPlayerEliminated 记录淘汰状态
 - 调用 GS_Core.CheckLevelShouldEnd 触发关卡结束检查
 - 真人和 AI 使用相同的处理逻辑
 
@@ -323,15 +323,14 @@ Y Axis → Add Controller Pitch Input (Up/Down)
 ```
 Sequence
 ├─ then_0: 事件绑定
-│   SET PS → Bind OnPlayerAvatarChange → Bind OnPlayerNumChange
+│   SET MyPS → Bind OnPlayerAvatarChange → Bind OnPlayerNumChange
 │
 ├─ then_1: 组件创建（仅服务端）
 │   Switch Has Authority
 │       └─ Authority → Add Actor Component (LevelCharacterComponentClass)
 │
-├─ then_2: 技能系统初始化
-│   ClearAbilitySet → GiveAbilitySet(LevelAbilitySet)
-│       → SET ASC → HandleSpeedRateChanged
+├─ then_2: 基础初始化
+│   SET ASC → HandleSpeedRateChanged
 │
 └─ then_3: 外观同步
     UpdatePlayerNum → UpdatePlayerAvatar
@@ -341,7 +340,8 @@ Sequence
 > **组件创建必须只在服务端执行**：通过 `Switch Has Authority` 确保只有服务端调用 `Add Actor Component`。组件需启用 `Component Replicates`，引擎会自动复制到客户端。
 
 **关键点**：
-- LevelAbilitySet 通过 GiveAbilitySet 赋予，同时建立输入绑定
+- InitPlayer 只负责基础初始化（ASC 缓存、速度初始化）
+- 技能管理完全由 HandlePlayerStart/Finish 负责，详见 [Comp_Character_Endurance.md](../../01-耐力之匣/架构/Comp_Character_Endurance.md#handleplayerstart-函数)
 - 组件添加仅服务端执行，复制系统负责同步到客户端
 - **LevelIMC 在 OnRep_LevelIMC 中设置**（见下方）
 

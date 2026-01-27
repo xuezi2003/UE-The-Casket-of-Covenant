@@ -143,7 +143,14 @@ Event HandlePlayerStart
 BP_Character.CapsuleComponent.SetCollisionObjectType(PawnBlock)
     ↓
 ASC.BP_ApplyGameplayEffectToSelf(GE_Started)
+    ↓
+GiveAbilitySet()
 ```
+
+**说明**：
+- 切换碰撞通道（Pawn → PawnBlock）
+- 添加 Player.State.Started 标签
+- 赋予关卡技能集（通过 GiveAbilitySet 函数）
 
 ---
 
@@ -152,10 +159,60 @@ ASC.BP_ApplyGameplayEffectToSelf(GE_Started)
 ```blueprint
 Event HandlePlayerFinish
     ↓
-ASC.BP_ApplyGameplayEffectToSelf(GE_Finish)
+ASC.BP_ApplyGameplayEffectToSelf(GE_Finish) ← 添加 Player.State.Finished 标签
     ↓
 BP_Character.CapsuleComponent.SetCollisionObjectType(Pawn)
+    ↓
+ClearAbilitySet()
 ```
+
+**说明**：
+- 添加 Player.State.Finished 标签
+- 切换碰撞通道（PawnBlock → Pawn）
+- 清理关卡技能集（通过 ClearAbilitySet 函数）
+
+---
+
+### GiveAbilitySet（函数）✅
+
+**类型**：函数
+
+```blueprint
+Event GiveAbilitySet
+    ↓
+BP_Character.MyPS.AbilitySystemComponent.GiveAbilitySet(BP_Character.LevelAbilitySet)
+    ↓
+SET BP_Character.MyPS.CurrentAbilitySetHandle = OutHandle
+```
+
+**说明**：
+- 赋予关卡技能集到 ASC
+- 将返回的 Handle 存储到 BP_Character.MyPS.CurrentAbilitySetHandle
+- Server 和 Client 都执行，确保 Handle 同步
+
+---
+
+### ClearAbilitySet（函数）✅
+
+**类型**：函数
+
+```blueprint
+Event ClearAbilitySet
+    ↓
+Sequence
+    ├─ then_0: 清理技能集
+    │   If (BP_Character.MyPS.CurrentAbilitySetHandle.AbilitySetPathName 不为空)
+    │       → BP_Character.MyPS.AbilitySystemComponent.ClearAbilitySet(BP_Character.MyPS.CurrentAbilitySetHandle)
+    │
+    └─ then_1: 清空 Handle
+        SET BP_Character.MyPS.CurrentAbilitySetHandle = Empty
+```
+
+**说明**：
+- 检查 Handle 是否有效（避免清理空 Handle）
+- 清理技能集（移除 Abilities、Attributes、Effects、Owned Tags）
+- 清空 Handle 变量
+- Server 和 Client 都执行
 
 ---
 

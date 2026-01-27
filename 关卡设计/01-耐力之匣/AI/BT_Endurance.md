@@ -2,22 +2,7 @@
 
 **父类**：BehaviorTree
 
-**实现状态**：✅ Phase 7.5 已完成（BT_Endurance 完整结构已实现）
-
-## 📋 实现进度
-
-| 阶段 | 状态 | 内容 |
-|------|:----:|------|
-| **设计阶段** | ✅ | AI能力清单、行为树结构、Blackboard设计、组件设计 |
-| **Phase 7.1** | ✅ | 前置依赖检查与补充（GE_Dead标签、GE_Started、BP_StartLine、NavMesh） |
-| **Phase 7.2** | ✅ | 创建Blackboard资产（BB_Endurance，8个键） |
-| **Phase 7.3** | ✅ | 创建自定义Service（BTService_UpdatePerception、BTService_WeightedRandomSelector） |
-| **Phase 7.4** | ✅ | 创建自定义Task/Decorator（BTTask_GetRandomLocationAhead、BTTask_GetNearestPlayer、BTDecorator_IndexMatch） |
-| **Phase 7.5** | ✅ | 创建行为树资产（BT_Endurance，完整结构已实现） |
-| **Phase 7.6** | ⏸️ | 配置与测试（GM_Endurance配置、PIE测试） |
-
-> **当前阶段**：Phase 7.5 已完成 ✅  
-> **下一阶段**：Phase 7.6 - 配置与测试  
+**实现状态**：✅ 已完成
 
 ---
 
@@ -25,135 +10,49 @@
 
 ### AI 能力清单
 
-**会做的**：
-- 走走停停地移动到终点（80% 移动，20% 等待）
-- 红灯时：原地不动(80%) / 往前偷偷动(20%)
-- 绿灯时：推搡附近玩家 / 闪避推搡 / 走走停停地移动
-- 碰撞拾取道具（被动）
+**会做的**：走走停停移动、红灯偷偷动、绿灯推搡/闪避、被动拾取道具  
+**不会做的**：跳跃、蹲行、主动找道具、瞄准投掷、躲避障碍物
 
-**不会做的**：
-- 跳跃
-- 蹲行
-- 主动寻找道具
-- 瞄准投掷
-- 躲避到障碍物后面
-
-### 行为树顶层结构
-
-```
-Root
-└─ Selector（所有 Decorator 和 Service 附加在此节点上）
-    ├─ Decorator: 死亡检查（Player.State.Dead 不存在）
-    ├─ Decorator: 开始检查（Player.State.Started 存在）
-    ├─ Service: 每 0.5s 更新感知
-    ├─ 红灯行为（优先级高，会中断绿灯）
-    └─ 绿灯行为
-```
-
-> **架构说明**：Root 节点不支持直接添加 Decorator 和 Service（UE 限制），因此所有 Decorator 和 Service 都附加在 Root 下的第一个 Composite 节点（Selector）上。  
 > **详细结构**：参见"四、行为树结构"章节
 
 ---
 
 ## 二、架构集成
 
-> **核心原则**：行为树只负责 AI 的决策逻辑，档案管理、网络同步、死亡表现等由现有架构自动处理。
+> **核心原则**：行为树只负责 AI 决策逻辑，档案管理、网络同步、死亡表现等由现有架构自动处理。
 
-### AI 生命周期与职责边界
-
-**行为树的职责**：只负责"运行阶段"的决策逻辑
-
-```
-【运行阶段】行为树控制决策
-├─ AIC_Core.OnPossess → Run Behavior Tree (BT_Endurance)
-├─ Service 更新 Blackboard（感知环境）
-├─ Decorator 判断条件（红灯/绿灯/死亡/开始）
-└─ Task 执行动作（移动/技能）
-```
-
-**其他阶段由现有架构自动处理**：
-- **生成/初始化**：GM_Core 管理 AI 生成，BP_Character_Game 自动初始化
-- **死亡/完成**：事件系统自动处理，行为树检测到标签后立即中断
-- **淘汰机制**：档案驱动，GI_FiveBox 跨关卡持久化
-
-> **详细流程**：参见 [系统架构](../../00-通用逻辑/系统架构.md)、[GM_Core](../../00-通用逻辑/核心类/GM_Core.md)
+### 职责边界
 
 | 职责 | 行为树 | 现有架构 |
 |------|:------:|:--------:|
-| **AI 决策逻辑** | ✅ | - |
-| 红灯/绿灯行为选择 | ✅ | - |
-| 移动目标选择 | ✅ | - |
-| 技能激活时机 | ✅ | - |
-| **档案管理** | ❌ | ✅ |
-| PlayerNum 分配 | - | GM_Core.GetUniquePlayerNum |
-| IsEliminated 更新 | - | BP_Character_Game.HandlePlayerEliminate |
-| IsFinished 更新 | - | BP_Character_Game.HandlePlayerFinish |
-| **网络同步** | ❌ | ✅ |
-| 技能效果同步 | - | GAS 自动复制 |
-| 移动同步 | - | Character Movement 自动复制 |
-| 状态同步 | - | RepNotify 自动复制 |
-| **表现逻辑** | ❌ | ✅ |
-| 死亡表现 | - | Comp_Character_Endurance.HandleHealthChanged |
-| 外观加载 | - | BP_Character_Game.UpdateAvatar |
-| QTE 响应 | - | GA_Stagger（按 AISuccessRate 概率） |
-| 完成检测 | - | BP_FinishLine.OnComponentEndOverlap |
+| **决策逻辑** | ✅ 红绿灯行为选择、移动目标、技能激活时机 | - |
+| **档案管理** | - | ✅ PlayerNum 分配、IsEliminated/IsFinished 更新 |
+| **网络同步** | - | ✅ GAS 自动复制、Character Movement 自动复制 |
+| **表现逻辑** | - | ✅ 死亡表现、外观加载、QTE 响应、完成检测 |
 
 ### 数据流向
 
-**输入（行为树从哪里获取数据）**：
-
-| 数据 | 来源 | 更新方式 |
-|------|------|----------|
-| **IsRedLight** | GS_Endurance | SM_Endurance 状态机控制，RepNotify 同步 |
-| **FinishLineActor** | 场景 | GetActorOfClass(BP_FinishLine) |
-| **NearbyPlayers** | 场景 | SphereOverlapActors（半径 120） |
-| **ShouldDodge** | 其他玩家 | 检查 NearbyPlayers 的 `Player.Action.Pushing` 标签 |
-| **Player.State.Dead** | GAS | GE_Dead 添加标签 |
-| **Player.State.Started** | GAS | BP_StartLine 触发，GE_Started 添加标签 |
-
-**输出（行为树的决策如何影响游戏）**：
-
-| 输出 | 目标 | 同步方式 |
-|------|------|----------|
-| **移动** | Character Movement | MoveTo Task → AI Controller → 自动复制 |
-| **技能激活** | GAS | BTTask_TriggerAbilityByClass → ASC → 自动复制 |
-| **档案更新** | GI_FiveBox | 事件系统自动触发（行为树无需感知） |
+**输入**：IsRedLight (GS_Endurance)、FinishLineActor (场景)、NearbyPlayers (SphereOverlap)、Player.State.* (GAS 标签)  
+**输出**：移动 (MoveTo → 自动复制)、技能激活 (GAS → 自动复制)
 
 ### 网络架构
 
-**执行位置**：
-- **行为树**：只在 Dedicated Server 运行（HasAuthority）
-- **Blackboard**：只在 Server 存在，不需要复制
-- **Service/Task/Decorator**：只在 Server 执行
-
-**同步机制**：
-- **技能效果**：GAS 自动复制（动画、标签、属性变化）
-- **移动**：Character Movement 自动复制（位置、旋转、速度）
-- **状态**：RepNotify 自动复制（IsRedLight、IsDetecting）
-- **档案**：GI_FiveBox 在 Server 上更新，不需要复制
-
-**客户端表现**：
-- 客户端看到同步后的结果（AI 在移动、播放动画、受到推搡等）
-- 客户端不知道 AI 的决策过程（行为树、Blackboard）
-- 客户端通过 RepNotify 获取红绿灯状态（用于 UI 显示、木偶动画等）
+- 行为树只在 **Dedicated Server** 运行（HasAuthority）
+- 通过 **GAS** 和 **Character Movement** 自动同步到客户端
+- 客户端只看到结果（移动、动画、效果），不知道决策过程
 
 ### 系统集成点
 
 | 系统 | 集成方式 | 说明 |
 |------|----------|------|
-| **GM_Core** | 配置 Level Behavior Tree | GM_Endurance.Level Behavior Tree = BT_Endurance |
-| **GM_Core** | AI 生成管理 | RestoreAISurvivors / FillAIPlayers |
-| **AIC_Core** | 运行行为树 | OnPossess → Run Behavior Tree (BT_Asset) |
-| **GS_Endurance** | 红绿灯状态 | Service 读取 IsRedLight（RepNotify） |
-| **SM_Endurance** | 红绿灯控制 | 状态机设置 GS_Endurance.IsRedLight |
-| **GI_FiveBox** | 档案管理 | SetPlayerEliminated / SetPlayerFinished（事件触发） |
-| **BP_Character_Game** | 事件监听 | HandlePlayerEliminate / HandlePlayerFinish |
-| **Comp_Character_Endurance** | 死亡处理 | HandleHealthChanged → 发送 Eliminated 事件 |
-| **BP_FinishLine** | 完成检测 | OnComponentEndOverlap → 发送 Finished 事件 |
-| **BP_StartLine** | 开始检测 | OnComponentEndOverlap → 发送 Started 事件 |
-| **GAS** | 技能激活 | BTTask_TriggerAbilityByClass → ASC.TryActivateAbilityByClass |
-| **GAS** | 状态标签 | GE_Dead 添加 Player.State.Dead，GE_Started 添加 Player.State.Started |
-| **NavMesh** | 寻路 | MoveTo Task 使用导航系统 |
+| **GM_Endurance** | Level Behavior Tree = BT_Endurance | 配置行为树资产 |
+| **AIC_Core** | OnPossess → Run Behavior Tree | 自动运行行为树 |
+| **GS_Endurance** | IsRedLight (RepNotify) | Service 读取红绿灯状态 |
+| **SM_Endurance** | 设置 IsRedLight | 状态机控制红绿灯 |
+| **BP_StartLine** | OnOverlap → GE_Started | 添加 Player.State.Started 标签 |
+| **BP_FinishLine** | OnOverlap → 发送 Finished 事件 | 完成检测 |
+| **GAS** | GE_Dead、GE_Started | 添加状态标签 |
+| **NavMesh** | MoveTo Task | 寻路系统 |
 
 ---
 
@@ -182,67 +81,172 @@ Root
 
 ### 4.1 顶层结构概览
 
-> **重要架构说明**：Root 节点不支持添加 Decorator 和 Service（UE 官方限制），因此 Decorator 和 Service 必须添加在 Root 下的第一个 Composite 节点（Selector）上。
+> **⚠️ 关键架构限制**：  
+> 根据 UE 官方文档，Root 节点不支持添加 Decorator 和 Service。  
+> **更重要的是**：如果 Decorator 和 Service 附加在 Root 的**直接子节点**上，它们也会被忽略！  
+> **解决方案**：在 Root 和实际逻辑节点之间添加一个**中间层 Sequence**，确保 Decorator 和 Service 不在 Root 的直接子节点上。
 
 ```
 Root
-└─ Selector（根 Selector）
-    ├─ Decorator: Check Dead Tag (Player.State.Dead 不存在)
-    ├─ Decorator: Check Start Tag (Player.State.Started 存在)
-    ├─ Service: BTS_UpdatePerception (0.5s)
-    │
-    ├─ 【分支1：红灯行为】
-    │   └─ Sequence
-    │       ├─ Decorator: CheckIsRedLight (Observer Aborts: Lower Priority)
-    │       └─ Selector（二选一：原地不动 80% / 往前偷偷动 20%）
-    │
-    └─ 【分支2：绿灯行为】
-        └─ Sequence
-            ├─ Decorator: CheckIsGreenLight
-            └─ Selector
-                ├─ 战斗行为（闪避 / 推搡）
-                └─ 移动行为（向前移动 80% / 等待 20%）
+└─ Sequence（中间层，确保 Decorator 生效）
+    └─ Selector（根 Selector）
+        ├─ Decorator: Check End Tag (Player.State.Dead 和 Player.State.Finished 都不存在)
+        ├─ Decorator: Check Game Phase (Match.Phase.Main.InProgress 存在)
+        ├─ Service: BTS_UpdatePerception (0.5s)
+        │
+        ├─ 【分支0：走出起点线】
+        │   └─ Sequence
+        │       ├─ Decorator: Check Start Tag (inversed, Player.State.Started 不存在)
+        │       ├─ BTTask_GetLocationBeyondStartLine
+        │       └─ MoveTo (TargetLocation)
+        │
+        ├─ 【分支1：红绿灯逻辑】
+        │   └─ Sequence
+        │       ├─ Decorator: Check Start Tag (Player.State.Started 存在)
+        │       └─ Selector "红绿灯选择器"
+        │           ├─ 红灯行为
+        │           │   └─ Sequence
+        │           │       ├─ Decorator: CheckIsRedLight (Observer Aborts: Lower Priority)
+        │           │       └─ Selector（二选一：原地不动 80% / 往前偷偷动 20%）
+        │           │
+        │           └─ 绿灯行为
+        │               └─ Sequence
+        │                   ├─ Decorator: CheckIsGreenLight
+        │                   └─ Selector
+        │                       ├─ 战斗行为（闪避 / 推搡）
+        │                       └─ 移动行为（向前移动 80% / 等待 20%）
+        │
+        └─ 【兜底：Wait Task】
+            └─ Wait (0.5s ± 0.1s)
 ```
 
 > **详细结构**：参见下方各小节
 
+> **⚠️ 重要说明**：
+> - 中间层 Sequence 必须保留，否则 Decorator 会被忽略
+> - 根 Selector 末尾的 Wait Task 是兜底方案，确保 Service 能正常更新（当所有分支都失败时，树会快速重启导致 Service 无法更新）
+> - Check Game Phase 确保 AI 只在 InProgress 阶段执行
+> - Check End Tag 同时检查 Dead 和 Finished 标签
+
+**行为树停止机制（双重保险）**：
+
+1. **Check End Tag Decorator**：
+   - 作用：阻止行为树执行新的分支
+   - 触发条件：AI 死亡（`Player.State.Dead`）或完成（`Player.State.Finished`）
+   - 效果：行为树停滞在 root，无法执行任何分支
+
+2. **StopLogic（AIC_Core）**：
+   - 作用：完全停止行为树 Tick，节省性能
+   - 触发条件：监听 `Gameplay.Event.Player.Eliminated` 和 `Gameplay.Event.Player.Finished` 事件
+   - 效果：行为树彻底停止，不再 Tick
+   - 详见：[AIC_Core.md](../../00-通用逻辑/核心类/AIC_Core.md#event-on-possess-) 中的事件监听实现
+
+**为什么需要双重保险？**
+- Decorator 作为第一道防线，立即阻止行为树执行新的分支
+- StopLogic 作为第二道防线，彻底停止行为树 Tick，节省性能
+- 两者配合，确保 AI 死亡/完成后行为树彻底停止
+
 ---
 
-### 4.2 红灯行为详细结构
+### 4.2 走出起点线详细结构
 
 ```
-【分支1：红灯行为】
+【分支0：走出起点线】
 └─ Sequence
-    ├─ Decorator: Blackboard Based - "CheckIsRedLight"
-    │   └─ Blackboard: IsRedLight is 已设置
-    │       Key Query: Is Set
-    │       Observer Aborts: Lower Priority（中断绿灯）
+    ├─ Decorator: Check Gameplay Tag Condition - "Check Start Tag"
+    │   └─ Actor to Check: SelfActor
+    │       Gameplay Tags: Player.State.Started
+    │       Inverse Condition: True（没有 Started 标签时执行）
     │
-    └─ Selector "RedLightSelector"（二选一）
-        ├─ Service: BTService_WeightedRandomSelector (Weights: [0.8, 0.2])
-        │   └─ Selected Index Key: SelectedIndex
-        │
-        ├─ [80%] 原地不动
-        │   └─ Sequence
-        │       ├─ Decorator: BTDecorator_IndexMatch (MyIndex = 0)
-        │       │   └─ Selected Index Key: SelectedIndex
-        │       └─ Wait (3s ± 1s)
-        │
-        └─ [20%] 往前偷偷动
-            └─ Sequence
-                ├─ Decorator: BTDecorator_IndexMatch (MyIndex = 1)
-                │   └─ Selected Index Key: SelectedIndex
-                ├─ BTTask_GetRandomLocationAhead
-                │   └─ Finish Line Key: FinishLineActor
-                │       Target Location Key: TargetLocation
-                │       Min Distance: 50.0
-                │       Max Distance: 80.0
-                └─ MoveTo (TargetLocation, Radius: 50)
+    ├─ BTTask_GetLocationBeyondStartLine
+    │   └─ Target Location Key: TargetLocation
+    │       Ahead Distance: 100.0
+    │
+    └─ MoveTo (TargetLocation, Radius: 50)
 ```
+
+**设计说明**：
+- **用途**：解决后续关卡 AI 在起点线内还原的问题
+- **触发条件**：AI 没有 Player.State.Started 标签（还没穿过起点线）
+- **执行逻辑**：
+  1. 计算起点线前方 100cm 的位置
+  2. 移动到目标位置
+  3. 穿过起点线时，BP_StartLine 触发，添加 Player.State.Started 标签
+  4. 下次循环时，Check Start Tag (inversed) 失败，跳过这个分支，进入红绿灯逻辑
+- **优先级**：最高（在红绿灯分支之前），确保 AI 先走出起点再执行其他逻辑
+- **适用场景**：
+  - 第一关：AI 在起点线外生成 → 已有 Started 标签 → 跳过此分支 → 直接进入红绿灯逻辑
+  - 后续关卡：AI 在起点线内还原 → 没有 Started 标签 → 执行此分支 → 走出起点 → 再进入红绿灯逻辑
 
 ---
 
-### 4.3 绿灯战斗行为详细结构
+### 4.3 红绿灯逻辑详细结构
+
+```
+【分支1：红绿灯逻辑】
+└─ Sequence
+    ├─ Decorator: Check Gameplay Tag Condition - "Check Start Tag"
+    │   └─ Actor to Check: SelfActor
+    │       Gameplay Tags: Player.State.Started
+    │       Inverse Condition: False（已有 Started 标签时执行）
+    │
+    └─ Selector "红绿灯选择器"
+        ├─ 红灯行为
+        │   └─ Sequence
+        │       ├─ Decorator: Blackboard Based - "CheckIsRedLight"
+        │       │   └─ Blackboard: IsRedLight is 已设置
+        │       │       Key Query: Is Set
+        │       │       Observer Aborts: Lower Priority（中断绿灯）
+        │       │
+        │       └─ Selector "RedLightSelector"（二选一）
+        │           ├─ Service: BTService_WeightedRandomSelector (Weights: [0.8, 0.2])
+        │           │   └─ Selected Index Key: SelectedIndex
+        │           │
+        │           ├─ [80%] 原地不动
+        │           │   └─ Sequence
+        │           │       ├─ Decorator: BTDecorator_IndexMatch (MyIndex = 0)
+        │           │       │   └─ Selected Index Key: SelectedIndex
+        │           │       └─ Wait (3s ± 1s)
+        │           │
+        │           └─ [20%] 往前偷偷动
+        │               └─ Sequence
+        │                   ├─ Decorator: BTDecorator_IndexMatch (MyIndex = 1)
+        │                   │   └─ Selected Index Key: SelectedIndex
+        │                   ├─ BTTask_GetLocationToFinishLine
+        │                   │   └─ Finish Line Key: FinishLineActor
+        │                   │       Target Location Key: TargetLocation
+        │                   │       Min Distance: 50.0
+        │                   │       Max Distance: 80.0
+        │                   └─ MoveTo (TargetLocation, Radius: 50)
+        │
+        └─ 绿灯行为
+            └─ Sequence
+                ├─ Decorator: Blackboard Based - "CheckIsGreenLight"
+                │   └─ Blackboard: IsRedLight is 未设置
+                │       Key Query: Is Not Set
+                │
+                └─ Selector
+                    ├─ 战斗行为（闪避 / 推搡）
+                    └─ 移动行为（向前移动 80% / 等待 20%）
+```
+
+**设计说明**：
+- **触发条件**：AI 已有 Player.State.Started 标签（已穿过起点线）
+- **优先级**：在"走出起点线"分支之后，确保 AI 先走出起点再执行红绿灯逻辑
+- **红绿灯切换**：通过 CheckIsRedLight Decorator 的 Observer Aborts: Lower Priority 实现红灯中断绿灯
+- **适用场景**：
+  - 第一关：AI 在起点线外生成 → 立即获得 Started 标签 → 直接执行红绿灯逻辑
+  - 后续关卡：AI 走出起点线后 → 获得 Started 标签 → 进入红绿灯逻辑
+
+---
+
+### 4.4 红灯行为详细结构
+
+> **注意**：红灯行为是红绿灯逻辑的子分支，详细结构参见 4.3 章节。
+
+---
+
+### 4.5 绿灯战斗行为详细结构
 
 ```
 【行为组1：战斗行为】
@@ -275,6 +279,12 @@ Root
     └─ 推搡分支
         └─ Sequence
             ├─ Decorator: Blackboard Based (HasNearbyPlayers is Set)
+            ├─ Decorator: Cooldown (2.0s)
+            ├─ Decorator: Check Gameplay Tag Condition - "Check Target Pushable"
+            │   └─ Actor to Check: TargetPlayer
+            │       Tags to Match: Any
+            │       Gameplay Tags: Player.State.Dead, Player.State.Finished, Player.State.Staggered, Player.State.Fallen
+            │       Inverse Condition: True
             ├─ Service: BTS_WeightedRandomSelector
             │   └─ Weights: [0.6, 0.4]
             │       Selected Index Key: SelectedIndex
@@ -283,12 +293,6 @@ Root
                 ├─ [60%] 推搡成功
                 │   └─ Sequence
                 │       ├─ Decorator: BTDecorator_IndexMatch (MyIndex = 0)
-                │       ├─ BTTask_GetNearestPlayer
-                │       │   └─ Target Player Key: TargetPlayer
-                │       │       Search Radius: 120.0
-                │       ├─ Rotate to Face BB Entry
-                │       │   └─ Blackboard Key: TargetPlayer
-                │       │       Precision: 10.0
                 │       ├─ Move To
                 │       │   └─ Blackboard Key: TargetPlayer
                 │       │       Acceptable Radius: 100.0
@@ -296,12 +300,19 @@ Root
                 └─ [40%] 不推搡
                     └─ Sequence
                         ├─ Decorator: BTDecorator_IndexMatch (MyIndex = 1)
-                        └─ Wait (0.1s)
+                        └─ Wait (0.5s)
 ```
+
+**设计说明**：
+- **TargetPlayer 由 Service 更新**：BTService_UpdatePerception 持续更新 TargetPlayer，推搡分支直接使用
+- **Check Target Pushable**：检查 TargetPlayer 是否可推搡，避免 AI 浪费时间和体力在无效目标上（死亡、已完成、失衡中、摔倒中的玩家）
+- **Cooldown (2.0s)**：强制冷却，无论推搡成功还是失败，2 秒内不会再次尝试推搡，防止 AI 频繁推搡
+- **Wait (0.5s)**：配合 Cooldown，"不推搡"分支等待 0.5 秒，让 AI 的决策更自然
+- **不检查 Invincible**：无敌状态短暂且频繁变化，推搡无敌目标导致自己摔倒是游戏设计的惩罚机制，保留这个"犯错"的可能性增加游戏趣味性
 
 ---
 
-### 4.4 绿灯移动行为详细结构
+### 4.6 绿灯移动行为详细结构
 
 ```
 【行为组2：移动行为】
@@ -314,7 +325,7 @@ Root
     ├─ [80%] 向前移动
     │   └─ Sequence
     │       ├─ Decorator: BTDecorator_IndexMatch (MyIndex = 0)
-    │       ├─ BTTask_GetRandomLocationAhead
+    │       ├─ BTTask_GetLocationToFinishLine
     │       │   └─ Finish Line Key: FinishLineActor
     │       │       Target Location Key: TargetLocation
     │       │       Min Distance: 200.0
@@ -339,15 +350,15 @@ Root
 
 | 组件名 | 用途 | 关键参数 |
 |--------|------|----------|
-| **BTService_UpdatePerception** | 每 0.5s 更新感知信息 | Interval: 0.5s, Random Deviation: 0.1s |
+| **BTService_UpdatePerception** | 每 0.5s 更新感知信息 | Interval, TargetPlayerKey |
 | **BTService_WeightedRandomSelector** | 加权随机选择 | Weights 数组（自动归一化） |
 
 ### Task 组件
 
 | 组件名 | 用途 | 关键参数 |
 |--------|------|----------|
-| **BTTask_GetNearestPlayer** | 查找最近的玩家 | SearchRadius: 120.0 |
-| **BTTask_GetRandomLocationAhead** | 计算朝向终点的随机位置 | MinDistance, MaxDistance |
+| **BTTask_GetLocationToFinishLine** | 计算朝向终点的随机位置 | MinDistance, MaxDistance, LateralRange |
+| **BTTask_GetLocationBeyondStartLine** | 计算起点线前方位置 | AheadDistance: 100.0 |
 | **MoveTo**（内置） | 移动到目标位置 | Acceptable Radius |
 | **Wait**（内置） | 等待指定时间 | Wait Time, Random Deviation |
 | **BTTask_TriggerAbilityByClass**（GAS Companion） | 激活 GAS Ability | Ability Class |
@@ -357,6 +368,7 @@ Root
 | 组件名 | 用途 | 关键参数 |
 |--------|------|----------|
 | **BTDecorator_IndexMatch** | 配合 WeightedRandomSelector 实现加权随机 | MyIndex, SelectedIndexKey |
+| **BTDecorator_CheckPhase** | 检查当前游戏阶段 | CheckPhase (GameplayTag) |
 | **Check Gameplay Tag Condition**（内置） | 检查 GameplayTag | Actor to Check, Gameplay Tags, Inverse Condition |
 | **Blackboard Based**（内置） | 检查 Blackboard 键值 | Key, Key Query, Observer Aborts |
 | **Composite**（内置） | 组合多个条件 | 逻辑图表（AND/OR） |
@@ -393,7 +405,7 @@ Root
 | 行为 | 概率 | 参数配置 |
 |------|:----:|----------|
 | 原地不动 | 80% | Wait (3s ± 1s) |
-| 往前偷偷动 | 20% | GetRandomLocationAhead (50-80 cm) |
+| 往前偷偷动 | 20% | BTTask_GetLocationToFinishLine (50-80 cm) |
 
 **权重配置**：WeightedRandomSelector (Weights: [0.8, 0.2])
 
@@ -410,8 +422,8 @@ Root
 
 | 行为 | 概率 | 参数配置 |
 |------|:----:|----------|
-| 推搡成功 | 60% | GetNearestPlayer → TriggerAbilityByClass (GA_Push) |
-| 不推搡 | 40% | Wait (0.1s) |
+| 推搡成功 | 60% | Move To → Push |
+| 不推搡 | 40% | Wait (0.5s) |
 
 **权重配置**：WeightedRandomSelector (Weights: [0.6, 0.4])
 
@@ -419,7 +431,7 @@ Root
 
 | 行为 | 概率 | 参数配置 |
 |------|:----:|----------|
-| 向前移动 | 80% | GetRandomLocationAhead (200-300 cm) |
+| 向前移动 | 80% | BTTask_GetLocationToFinishLine (200-300 cm) |
 | 等待 | 20% | Wait (0.1s) |
 
 **权重配置**：WeightedRandomSelector (Weights: [0.8, 0.2])

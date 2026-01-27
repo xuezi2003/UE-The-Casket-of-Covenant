@@ -60,7 +60,7 @@ Return Spawned Pawn
 
 **注意**：
 - 组件实际在 BP_Character_Game.InitPlayer 里添加，不在 GM 里添加
-- AbilitySet 也在 InitPlayer 里通过 GiveAbilitySet 赋予
+- AbilitySet 在 HandlePlayerStart 里通过 GiveAbilitySet 赋予（穿过起点线后）
 - GM 只负责传入配置参数
 
 ### Event OnPostLogin（玩家登录）✅
@@ -93,13 +93,14 @@ For Each (GI_FiveBox.PlayerRecords)
 条件：!IsHuman && !IsEliminated
     ↓ True
     ├─ SpawnActor BP_Character_Game（传入 LevelCharacterComponentClass/LevelIMC/LevelAbilitySet）
-    ├─ SpawnActor AIC_Core
+    ├─ SpawnActor AIC_Core（传入 BT_Asset=Level_BehaviorTree）
     ├─ Possess(Character)
     └─ 从档案注入 PlayerNum/AvatarData 到 PS
 ```
 
 **说明**：
 - 还原存活的 AI
+- **BT_Asset 传递**：将 GM 的 `Level_BehaviorTree` 变量传递给 AIC_Core 的 `BT_Asset`（Expose on Spawn）
 - **不再需要调用 HandlePlayerLogin**（Character 自己在 BeginPlay 时绑定监听）
 
 ### FillAIPlayers（AI 填充）✅
@@ -110,7 +111,7 @@ NeedAICnt = NeedPlayerCnt - LENGTH(PlayerRecords)
 For Loop (1 to NeedAICnt)
     ↓ LoopBody
     ├─ SpawnActor BP_Character_Game（传入 LevelCharacterComponentClass/LevelIMC/LevelAbilitySet）
-    ├─ SpawnActor AIC_Core
+    ├─ SpawnActor AIC_Core（传入 BT_Asset=Level_BehaviorTree）
     ├─ Possess(Character)
     ├─ GetUniquePlayerNum → 设置 PlayerNum
     ├─ GetRandomAvatar → 设置 AvatarData
@@ -119,6 +120,7 @@ For Loop (1 to NeedAICnt)
 
 **说明**：
 - 填充 AI 到目标人数
+- **BT_Asset 传递**：将 GM 的 `Level_BehaviorTree` 变量传递给 AIC_Core 的 `BT_Asset`（Expose on Spawn）
 - **不再需要调用 HandlePlayerLogin**（Character 自己在 BeginPlay 时绑定监听）
 
 ### GetSpawnPos（虚函数）
