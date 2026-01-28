@@ -3,222 +3,8 @@
 ## GAS Companion
 - **官方文档**: https://gascompanion.github.io/
 - **Fab 商店**: https://www.fab.com/listings/20d07b00-e7ba-4c5d-8ec0-aab6a79b908a
-- **用途**: GAS 系统核心框架（ASC 挂载、技能、属性、输入绑定）
-
-### GSCUserWidget / GSCUWHud（UI 系统）
-
-> **文档来源**: https://gascompanion.github.io/working-with-ui/
-
-#### 类继承关系
-
-```
-UUserWidget
-└── GSCUserWidget（基础类，提供 ASC 交互能力）
-    └── GSCUWHud（HUD 专用，提供自动绑定 + 事件 API）
-```
-
-#### GSCUWHud 自动绑定 Widgets
-
-使用 `meta=(BindWidgetOptional)` 实现，只需在 Widget 中创建**同名控件**即可自动绑定：
-
-| 控件名称 | 类型 | 自动绑定属性 |
-|----------|------|--------------|
-| `HealthProgressBar` | Progress Bar | Health / MaxHealth |
-| `StaminaProgressBar` | Progress Bar | Stamina / MaxStamina |
-| `ManaProgressBar` | Progress Bar | Mana / MaxMana |
-| `HealthText` | Text | Health 数值文本 |
-| `StaminaText` | Text | Stamina 数值文本 |
-| `ManaText` | Text | Mana 数值文本 |
-
-> **注意**：自动绑定仅限 GSCAttributeSet 中的默认属性。自定义属性（如 SpeedRate）需使用 Exposed Events 手动处理。
-
-#### Exposed Events（事件驱动 API）
-
-GSCUserWidget / GSCUWHud 提供以下可覆盖事件：
-
-| 事件 | 触发时机 | 用途 |
-|------|----------|------|
-| `OnAttributeChange` | 任意属性变化 | 自定义属性 UI 更新 |
-| `OnGameplayTagChange` | Gameplay Tag 变化 | 状态指示器（力竭、失衡等） |
-| `OnGameplayEffectAdded` | GE 添加到 ASC | Buff/Debuff 图标显示 |
-| `OnGameplayEffectRemoved` | GE 从 ASC 移除 | Buff/Debuff 图标隐藏 |
-| `OnGameplayEffectTimeChange` | GE 持续时间刷新 | 倒计时 UI 更新 |
-| `OnCooldownStart` | 技能冷却开始 | 冷却 UI 显示 |
-| `OnCooldownEnd` | 技能冷却结束 | 冷却 UI 隐藏 |
-
-#### 核心函数
-
-| 函数 | 说明 |
-|------|------|
-| `InitializeWithAbilitySystem()` | 初始化 ASC 绑定，设置事件委托 |
-| `SetOwnerActor(Actor)` | 设置/更新 Owner Actor 和 ASC 缓存 |
-
-#### 使用建议
-
-1. **通用 HUD**：继承 `GSCUWHud`，利用自动绑定 + Exposed Events
-2. **自定义 Widget**：继承 `GSCUserWidget`，完全手动处理
-3. **BindWidget 规则**：控件名必须**完全匹配**（区分大小写）
-
-### AI 行为树集成
-
-> **文档来源**: https://gascompanion.github.io/working-with-ai/
-
-#### 内置 BTTask
-
-| Task 名称 | 用途 | 配置 |
-|-----------|------|------|
-| `BTTask_TriggerAbilityByClass` | 通过 Ability Class 激活技能 | 指定 Ability Class（如 GA_Sprint） |
-| `BTTask_TriggerAbilityByTags` | 通过 Gameplay Tags 激活技能 | 指定 Tag Container（如 `Ability.Melee`） |
-
-**关键特性**：
-- 两个 Task 都会自动绑定 `GSCGameplayAbility.OnAbilityEnded` 委托
-- 技能结束时自动调用 `FinishExecute`，无需手动处理等待逻辑
-- 支持远程激活（`bAllowRemoteActivation`）
-
-#### GSCGameplayAbility 特性
-
-> **API 文档**: https://gascompanion.github.io/api/Abilities/GSCGameplayAbility/
-
-| 特性 | 说明 |
-|------|------|
-| `OnAbilityEnded` 委托 | 蓝图可绑定的委托，技能结束时触发（用于 BTTask 等待） |
-| `bActivateOnGranted` | 自动激活（被动技能） |
-| `bLooselyCheckAbilityCost` | 宽松的消耗检查（允许负值） |
-| `EffectContainerMap` | 通过 Tag 管理 GE 容器 |
-
-#### GSCCoreComponent 事件
-
-> **API 文档**: https://gascompanion.github.io/api/Components/GSCCoreComponent/
-
-| 事件 | 参数 | 用途 |
-|------|------|------|
-| `OnAttributeChange` | Attribute, DeltaValue, EventTags | 任何属性变化时触发 |
-| `OnAbilityActivated` | Ability | 技能激活时 |
-| `OnAbilityEnded` | Ability | 技能结束时 |
-| `OnGameplayTagChange` | GameplayTag, NewTagCount | 标签添加/移除时 |
-
-#### ASC 获取方式
-
-- **蓝图**：使用 `Get Ability System Component` 节点会自动处理 PlayerState 的情况
-- **C++**：`UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(Actor)`
-- 无需手动区分 ASC 在 Pawn 还是 PlayerState 上
-
-### Ability Sets（技能集管理）
-
-> **文档来源**: https://gascompanion.github.io/ability-sets/
-
-**用途**：通过 Data Asset 统一管理一组 Abilities、Attributes、Effects 和 Owned Tags
-
-#### 创建方式
-Content Browser → 右键 → Miscellaneous → Data Asset → 选择 `GSCAbilitySet`
-
-#### API 方法
-
-| 方法 | 说明 | 调用位置 |
-|------|------|----------|
-| `GiveAbilitySet()` | 赋予技能集，返回 Handle | Server + Client（用于输入绑定） |
-| `ClearAbilitySet()` | 移除技能集（通过 Handle） | Server + Client |
-
-**典型使用场景**：
-- 装备武器/道具时赋予技能集
-- 卸载武器/道具时清除技能集
-- 关卡切换时更换技能集
-
-**注意事项**：
-- 需要 `GSCAbilityInputBindingComponent` 才能绑定输入
-- PlayerState ASC 需要在 `OnInitAbilityActorInfo` 中调用
-- 非 PlayerState ASC 可以在 `BeginPlay` 中调用
-
-### Ability Queue System（技能队列系统）
-
-> **文档来源**: https://gascompanion.github.io/ability-queue-system/
-
-**用途**：允许在技能执行期间缓冲下一个技能，提升操作响应性（类似魂系游戏）
-
-#### 工作原理
-- 监听技能激活失败（通常因为 Blocking Tags）
-- 存储失败的技能引用
-- 当前技能结束时，自动尝试激活队列中的技能
-
-#### 启用方式
-
-**方式1：动画通知（推荐）**
-- 在 Anim Montage 中添加 `AbilityQueueWindow` Notify State
-- 配置允许队列的技能列表或允许所有技能
-- 精确控制队列窗口的开启/关闭时机
-
-**方式2：Ability 属性**
-- 在 `GSCGameplayAbility` 中勾选 `bEnableAbilityQueue`
-- 技能激活时自动开启队列，结束时关闭
-- 允许所有技能进入队列
-
-#### 必需组件
-- Pawn/Character 必须添加 `GSCAbilityQueueComponent`
-
-#### 调试命令
-```
-GASCompanion.Debug.AbilityQueue
-```
-
-### Loosely Check Ability Cost（宽松消耗检查）
-
-> **文档来源**: https://gascompanion.github.io/ignore-ability-cost/
-
-**用途**：允许技能在资源不足时仍可激活，资源可进入负值（类似黑魂体力机制）
-
-#### 配置方式
-在 `GSCGameplayAbility` 中勾选 `bLooselyCheckAbilityCost`
-
-#### 行为差异
-
-| 模式 | 激活条件 | 结果 |
-|------|----------|------|
-| 默认 | 资源 >= 消耗值 | 资源不足时无法激活 |
-| 宽松检查 | 资源 > 0 | 可激活，资源可进入负值 |
-
-**注意**：默认属性会被 Clamp 在 0，如需负值需在 AttributeSet 的 `PostGameplayEffectExecute` 中处理
-
-### Modular Character 类型
-
-> **文档来源**: https://gascompanion.github.io/working-with-ai/
-
-| 类型 | ASC 位置 | 适用场景 |
-|------|----------|----------|
-| `GSCModularCharacter` | Pawn | AI 角色（不需要 PlayerState） |
-| `GSCModularPlayerStateCharacter` | PlayerState | 玩家角色（需要跨 Pawn 持久化） |
-| `GSCModularPawn` | Pawn | 简单 Pawn（不需要 PlayerState） |
-
-**项目使用**：`BP_Character_Game` 继承自 `GSCModularPlayerStateCharacter`，真人和 AI 共用
-
-### Replication Mode（复制模式）
-
-| 模式 | 复制内容 | 适用场景 |
-|------|----------|----------|
-| **Full** | 所有 GE 复制到所有客户端 | 单人游戏 |
-| **Mixed** | GE 只复制给 Owner，Tags/Cues 复制给所有人 | 多人游戏 - 玩家控制 |
-| **Minimal** | 只复制 Tags/Cues | 多人游戏 - AI 控制 |
-
-**项目配置**：应使用 Mixed 模式（玩家控制的角色）
-
-### Enhanced Input Integration
-
-> **文档来源**: https://gascompanion.github.io/api/Components/GSCAbilityInputBindingComponent/
-
-**核心组件**：`GSCAbilityInputBindingComponent`
-
-#### 关键方法
-
-| 方法 | 用途 |
-|------|------|
-| `SetInputBinding()` | 为 Ability 设置输入绑定 |
-| `ClearInputBinding()` | 清除 Ability 的输入绑定 |
-| `GetBoundInputActionForAbility()` | 获取 Ability 绑定的 InputAction |
-
-#### Trigger Event 类型
-- **Started**：按下瞬间触发（推荐，用于单次动作）
-- **Triggered**：每帧触发（慎用，可能导致问题）
-
-**注意**：InputBindingComponent 只能添加到 Pawn 上，不能添加到 PlayerState
+- **用途**: GAS 系统核心框架（ASC 挂载、技能、属性、输入绑定、UI 与 AI 集成）
+- **详细指南**: [GAS Companion Documentation](./Plugins/GAS Companion Documentation.md)
 
 ---
 
@@ -473,4 +259,23 @@ FAB 集成后，Megascans 纹理工作流发生变化：
 
 - **Node Reference**: https://dev.epicgames.com/documentation/en-us/unreal-engine/behavior-tree-node-reference-in-unreal-engine
 - **Quick Start Guide**: https://dev.epicgames.com/documentation/en-us/unreal-engine/behavior-tree-in-unreal-engine---quick-start-guide
+
+---
+
+## Volumetric Glass
+- **官方文档**: https://imaginaryblend.com/2018/12/30/volumetric-glass/
+- **Marketplace**: https://www.unrealengine.com/marketplace/en-US/product/volumetric-glass
+- **Fab**: https://www.fab.com/listings/dad47d76-0a70-45fe-b9e8-1be166292499
+- **用途**: 高级体积与玻璃材质系统（水箱、水下窗户、科幻实验室、体积雾）
+- **详细指南**: [Volumetric Glass 参考](./Plugins/Volumetric Glass 参考.md)
+
+### 核心功能
+- **双材质系统**: 
+    - `M_GlassVolume`: 内部体积渲染（从水内观察窗口、隧道）
+    - `M_GlassShape`: 外部形状渲染（水箱、体积雾、科幻容器）
+- **极致性能**: 仅 150 条指令，GPU 友好，专为移动端/VR 优化
+- **多种形状**: 支持盒体、球体、椭圆、圆柱、自定义网格
+- **反射捕捉**: 基于 Scene Capture 的高效立方体贴图反射（支持盒体投影）
+- **高级效果**: 光轴、散射、动画裁切平面、多通道点光源
+- **样条线隧道**: `BP_TunelSplineActor` 用于创建水下隧道
 
