@@ -33,8 +33,7 @@ stateDiagram-v2
 ### 1. GreenLight 状态
 
 **On State Begin**:
-- 设置 `Context.IsRedLight = false`
-- 调用 `Context.OnIsRedLightChange` (确保触发相关逻辑)
+- 使用通知设置 `Context.IsRedLight = false`
 - 打印日志: `"[SM_Endurance] 绿灯 (行)"`
 
 **Transitions**:
@@ -46,8 +45,7 @@ stateDiagram-v2
 ### 2. RedLight 状态
 
 **On State Begin**:
-- 设置 `Context.IsRedLight = true`
-- 调用 `Context.OnIsRedLightChange`
+- 使用通知设置 `Context.IsRedLight = true`
 - 打印日志: `"[SM_Endurance] 红灯 (停)"`
 
 **Transitions**:

@@ -1,8 +1,15 @@
-# Comp_Character_Endurance（ActorComponent）
+# Comp_Character_Endurance
+
+**父类**：Comp_Character_Core
 
 **职责**：关卡1 角色组件，移动状态检测 + 体力消耗管理（服务端逻辑）
 
 **挂载于**：BP_Character_Game（在 InitPlayer 里根据 LevelCharacterComponentClass 动态添加）
+
+**实现状态**：✅ 已完成（Phase 0.5 重构完成）
+
+> [!NOTE]
+> **继承关系**：继承自 [Comp_Character_Core](../../00-通用逻辑/核心类/Comp_Character_Core.md)，复用 ASC 初始化、玩家开始/完成处理、技能集管理等共性逻辑。子类只需实现关卡1专属的属性监听、标签监听、道具系统、死亡处理。
 
 > [!NOTE]
 > **命名规范**：`Comp_Character_xxx` 挂载在 Character 上处理服务端逻辑，`Comp_PC_xxx` 挂载在 PlayerController 上处理客户端逻辑（如 QTE UI）。
@@ -18,42 +25,80 @@
 
 ## 变量
 
+### 继承自基类（Comp_Character_Core）
+
 | 变量名 | 类型 | 用途 |
 |--------|------|------|
-| BP_Character | BP_Character_Game | 缓存的角色引用 |
-| ASC | AbilitySystemComponent | 缓存的 ASC 引用 |
-| GSCCore | GSCCoreComponent | 缓存的 GSCCore 引用（用于绑定事件） |
+| BP_Character_Core | BP_Character_Game | 缓存的角色引用 |
+| ASC_Core | AbilitySystemComponent | 缓存的 ASC 引用 |
+| GSCCore_Core | GSCCoreComponent | 缓存的 GSCCore 引用（用于绑定事件） |
+
+> [!NOTE]
+> **变量重命名**：为了更容易区分继承自基类的变量，在蓝图中这些变量显示为 `BP_Character_Core`、`ASC_Core`、`GSCCore_Core`。
+
+### 关卡1专属变量
+
+| 变量名 | 类型 | 用途 |
+|--------|------|------|
 | IsMoving | Boolean | 当前是否移动中 |
 | MovingThreshold | Float | 移动速度阈值 |
 | ExhaustedThreshold | Float | 力竭退出阈值（默认 15） |
 
 ## 关键逻辑
 
-### Event BeginPlay
+### 继承自基类的函数
 
-```
-Get Owner → Cast To BP_Character_Game → SET BP_Character
-    ↓
-Set Timer by Function Name (WaitForASC, Looping)
-```
+以下函数已在 [Comp_Character_Core](../../00-通用逻辑/核心类/Comp_Character_Core.md) 中实现，子类无需重复实现。如需了解详细逻辑，请参考基类文档。
 
-### WaitForASC（自定义事件）✅
+| 函数名 | 说明 |
+|--------|------|
+| **Event BeginPlay** | 缓存 BP_Character 引用，启动 InitComp Timer |
+| **InitComp** | 等待 ASC 初始化，绑定 Started/Finished 事件（子类通过 Override 扩展） |
+| **HandlePlayerStart** | 切换碰撞通道、添加 Started 标签、赋予技能集 |
+| **HandlePlayerFinish** | 添加 Finished 标签、切换碰撞通道、清理技能集 |
+| **GiveAbilitySet** | 赋予关卡技能集到 ASC |
+| **ClearAbilitySet** | 清理关卡技能集 |
+
+> [!NOTE]
+> **子类不应该重写这些函数**，除非有特殊需求。如果需要在初始化时添加额外逻辑，应该通过 Override InitComp 并调用 Parent: InitComp 来扩展。
+
+### InitComp（Override）
 
 ```blueprint
-BP_Character → Get Component by Class (GSCCoreComponent) → SET GSCCore
+Event InitComp (Override)
     ↓
-Get Ability System Component from Actor (BP_Character)
+Parent: InitComp ← 调用父类逻辑（等待ASC、绑定Started/Finished事件）
     ↓
-Is Valid?
-    ├─ Yes → SET ASC → Clear Timer (WaitForASC)
-    │        → Bind Event to On Gameplay Tag Change (GSCCore) → HandleTagChanged
-    │        → Bind Event to On Attribute Change (GSCCore) → HandleAttributeChanged
-    │        → AsyncAction: Wait for Gameplay Event (Gameplay.Event.Player.Started)
-    │            → HandlePlayerStart()
-    │        → AsyncAction: Wait for Gameplay Event (Gameplay.Event.Player.Finished)
-    │            → HandlePlayerFinish()
-    └─ No → 继续等待
+Is Valid (GSCCore_Core)
+    ↓ Is Valid
+Bind Event to On Gameplay Tag Change (GSCCore_Core) → HandleTagChanged
+    ↓
+Bind Event to On Attribute Change (GSCCore_Core) → HandleAttributeChanged
 ```
+
+**说明**：
+- 调用父类 InitComp，完成 ASC 初始化和基础事件绑定
+- **关键**：必须检查 `Is Valid (GSCCore_Core)`，因为父类的 Is Valid 判断不会影响子类执行流程
+- 只有当 GSCCore_Core 有效时才绑定事件，避免空引用报错
+- 如果 GSCCore_Core 无效，Timer 会继续循环调用 InitComp 直到初始化完成
+- 添加关卡1专属的属性监听（Stamina、Health）
+- 添加关卡1专属的标签监听（Running、Crouching）
+
+---
+
+### Event Tick
+
+```blueprint
+Event Tick (DeltaSeconds)
+    ↓
+HandleMoving()
+```
+
+**说明**：
+- 每帧调用 HandleMoving 检测玩家移动状态
+- HandleMoving 会根据速度应用/移除 GE_Moving 效果
+
+---
 
 ### HandleAttributeChanged（自定义事件）
 
@@ -83,43 +128,43 @@ Player.Action.Crouching → HandleCrouching
 
 ```
 IsRunning?
-    ├─ True → ApplyGameplayEffectToSelf (GE_StaminaDrain_Sprint)
-    └─ False → RemoveActiveGameplayEffectBySourceEffect (GE_StaminaDrain_Sprint, Stacks = -1)
+    ├─ True → ASC_Core.ApplyGameplayEffectToSelf (GE_StaminaDrain_Sprint)
+    └─ False → ASC_Core.RemoveActiveGameplayEffectBySourceEffect (GE_StaminaDrain_Sprint, Stacks = -1)
 ```
 
 ### HandleCrouching（函数）
 
 ```
-ApplyGameplayEffectToSelf (GE_Moving)
+ASC_Core.ApplyGameplayEffectToSelf (GE_Moving)
     ↓
 Delay (0.2s)
     ↓
-RemoveActiveGameplayEffectBySourceEffect (GE_Moving, Stacks = -1)
+ASC_Core.RemoveActiveGameplayEffectBySourceEffect (GE_Moving, Stacks = -1)
 ```
 
 ### HandleStaminaChanged（函数）
 
 ```
-Has Matching Gameplay Tag (Player.State.Exhausted)?
-    ├─ 否（未力竭） → Stamina <= 0? → ApplyGameplayEffectToSelf (GE_Exhausted)
-    └─ 是（已力竭） → Stamina >= ExhaustedThreshold? → RemoveActiveGameplayEffectBySourceEffect (GE_Exhausted)
+ASC_Core.Has Matching Gameplay Tag (Player.State.Exhausted)?
+    ├─ 否（未力竭） → Stamina <= 0? → ASC_Core.ApplyGameplayEffectToSelf (GE_Exhausted)
+    └─ 是（已力竭） → Stamina >= ExhaustedThreshold? → ASC_Core.RemoveActiveGameplayEffectBySourceEffect (GE_Exhausted)
 ```
 
-### HandleHealthChanged（函数）✅
+### HandleHealthChanged（函数）
 
 ```blueprint
-If (GetFloatAttributeFromAbilitySystemComponent(ASC, BAS_Core.Health) <= 0 
-    AND NOT ASC.HasMatchingGameplayTag(Player.State.Dead))
+If (GetFloatAttributeFromAbilitySystemComponent(ASC_Core, BAS_Core.Health) <= 0 
+    AND NOT ASC_Core.HasMatchingGameplayTag(Player.State.Dead))
     ↓ True
-    ASC.BP_ApplyGameplayEffectToSelf (GE_Dead)
+    ASC_Core.BP_ApplyGameplayEffectToSelf (GE_Dead)
         ↓
     Switch Has Authority → Authority:
         ↓
     SphereOverlapActors (
         ActorClassFilter: BP_Character_Game,
-        ActorsToIgnore: [BP_Character],
+        ActorsToIgnore: [BP_Character_Core],
         ObjectTypes: [],
-        SpherePos: BP_Character.K2_GetActorLocation(),
+        SpherePos: BP_Character_Core.K2_GetActorLocation(),
         SphereRadius: DeathEffectRadius
     )
         ↓
@@ -130,121 +175,45 @@ If (GetFloatAttributeFromAbilitySystemComponent(ASC, BAS_Core.Health) <= 0
         │           → SendGameplayEventToActor (Gameplay.Event.Activate.Stagger.DeathBroadcast)
         │
         └─ then_1: 死亡处理链
-            ├─ SpawnDeadCoin()
-            ├─ Multicast_OnDeath()
-            └─ SendGameplayEventToActor (BP_Character, Gameplay.Event.Player.Eliminated)
+            ├─ Multicast_OnDeath() ← 立即播放死亡表现
+            ├─ SendGameplayEventToActor (BP_Character_Core, Gameplay.Event.Player.Eliminated)
+            └─ SpawnDeadCoin() ← 延迟1秒后掉落金币
 ```
 
-### HandlePlayerStart（函数）✅
-
-```blueprint
-Event HandlePlayerStart
-    ↓
-BP_Character.CapsuleComponent.SetCollisionObjectType(PawnBlock)
-    ↓
-ASC.BP_ApplyGameplayEffectToSelf(GE_Started)
-    ↓
-GiveAbilitySet()
-```
-
-**说明**：
-- 切换碰撞通道（Pawn → PawnBlock）
-- 添加 Player.State.Started 标签
-- 赋予关卡技能集（通过 GiveAbilitySet 函数）
+> [!NOTE]
+> **执行顺序优化**：死亡处理链的顺序为 Multicast_OnDeath → SendGameplayEventToActor → SpawnDeadCoin，确保玩家立即看到死亡表现，然后通知系统处理淘汰逻辑，最后掉落金币。
 
 ---
 
-### HandlePlayerFinish（函数）✅
-
-```blueprint
-Event HandlePlayerFinish
-    ↓
-ASC.BP_ApplyGameplayEffectToSelf(GE_Finish) ← 添加 Player.State.Finished 标签
-    ↓
-BP_Character.CapsuleComponent.SetCollisionObjectType(Pawn)
-    ↓
-ClearAbilitySet()
-```
-
-**说明**：
-- 添加 Player.State.Finished 标签
-- 切换碰撞通道（PawnBlock → Pawn）
-- 清理关卡技能集（通过 ClearAbilitySet 函数）
-
----
-
-### GiveAbilitySet（函数）✅
-
-**类型**：函数
-
-```blueprint
-Event GiveAbilitySet
-    ↓
-BP_Character.MyPS.AbilitySystemComponent.GiveAbilitySet(BP_Character.LevelAbilitySet)
-    ↓
-SET BP_Character.MyPS.CurrentAbilitySetHandle = OutHandle
-```
-
-**说明**：
-- 赋予关卡技能集到 ASC
-- 将返回的 Handle 存储到 BP_Character.MyPS.CurrentAbilitySetHandle
-- Server 和 Client 都执行，确保 Handle 同步
-
----
-
-### ClearAbilitySet（函数）✅
-
-**类型**：函数
-
-```blueprint
-Event ClearAbilitySet
-    ↓
-Sequence
-    ├─ then_0: 清理技能集
-    │   If (BP_Character.MyPS.CurrentAbilitySetHandle.AbilitySetPathName 不为空)
-    │       → BP_Character.MyPS.AbilitySystemComponent.ClearAbilitySet(BP_Character.MyPS.CurrentAbilitySetHandle)
-    │
-    └─ then_1: 清空 Handle
-        SET BP_Character.MyPS.CurrentAbilitySetHandle = Empty
-```
-
-**说明**：
-- 检查 Handle 是否有效（避免清理空 Handle）
-- 清理技能集（移除 Abilities、Attributes、Effects、Owned Tags）
-- 清空 Handle 变量
-- Server 和 Client 都执行
-
----
-
-### SpawnDeadCoin（函数）✅
+### SpawnDeadCoin（函数）
 
 ```blueprint
 Event SpawnDeadCoin
     ↓
 Delay (1s)
     ↓
-For Loop (1 to FFloor(GetFloatAttribute(BAS_Core.Coin)))
+For Loop (1 to FFloor(GetFloatAttribute(ASC_Core, BAS_Core.Coin)))
     ↓ LoopBody
     SpawnActor (BP_Item_Coin)
-        ├─ Location: BP_Character.GetActorLocation() + RandomXY(0~80)
+        ├─ Location: BP_Character_Core.GetActorLocation() + RandomXY(0~80)
         ├─ InitialState: InField
-        └─ Instigator: BP_Character
+        └─ Instigator: BP_Character_Core
 ```
 
-### Multicast_OnDeath（Custom Event）✅
+### Multicast_OnDeath（Custom Event）
 
 **类型**：NetMulticast, Reliable
 
 ```blueprint
 Event Multicast_OnDeath
     ↓
-BP_Character.CapsuleComponent.SetCollisionEnabled (NoCollision)
+BP_Character_Core.CapsuleComponent.SetCollisionEnabled (NoCollision)
     ↓
-BP_Character.Mesh.SetCollisionEnabled (QueryAndPhysics)
+BP_Character_Core.Mesh.SetCollisionEnabled (QueryAndPhysics)
     ↓
-BP_Character.Mesh.SetSimulatePhysics (true)
+BP_Character_Core.Mesh.SetSimulatePhysics (true)
     ↓
-BP_Character.CharacterMovement.DisableMovement()
+BP_Character_Core.CharacterMovement.DisableMovement()
 ```
 
 ---
@@ -254,7 +223,7 @@ BP_Character.CharacterMovement.DisableMovement()
 ```
 Switch Has Authority
     ↓ Authority
-Is Valid (ASC)
+Is Valid (ASC_Core)
     ↓ Is Valid
 速度 >= MovingThreshold?
     ├── True → NOT IsMoving? → Apply GE_Moving → SET IsMoving = true
@@ -263,7 +232,7 @@ Is Valid (ASC)
 
 ---
 
-## 道具系统接口 ✅
+## 道具系统接口
 
 ### 新增变量
 
@@ -276,31 +245,80 @@ Is Valid (ASC)
 
 ### 新增函数
 
-| 函数 | 权限 | 说明 | 状态 |
-|------|------|------|:----:|
-| `SetThrowItemID(NewItemID)` | Server | 使用通知设置 ThrowItemID | ✅ |
-| `OnRep_ThrowItemID` | Client | RepNotify，查表更新 ThrowItemData | ✅ |
-| `GetThrowItemID()` | Any | 获取当前持有道具 ID | ✅ |
-| `ClearThrowItemID()` | Server | 清空持有道具 | ✅ |
-| `Multicast_ShowPropInHand(IsShow)` | NetMulticast | 同步显示/隐藏手持道具 | ✅ |
-| `ShowPropInHand()` | Local | 动态添加组件并附加到 Socket | ✅ |
-| `ClearPropInHand()` | Local | 销毁手持道具组件 | ✅ |
+| 函数 | 权限 | 说明 |
+|------|------|------|
+| `SetThrowItemID(NewItemID)` | Any | 设置 ThrowItemID（由 RepNotify 自动同步） |
+| `OnRep_ThrowItemID` | Client | RepNotify，查表更新 ThrowItemData |
+| `GetThrowItemID()` | Any | 获取当前持有道具 ID |
+| `ClearThrowItemID()` | Server | 清空持有道具（服务端权限检查） |
+| `Multicast_ShowPropInHand(IsShow)` | NetMulticast | 同步显示/隐藏手持道具 |
+| `ShowPropInHand()` | Local | 动态添加组件并附加到 Socket |
+| `ClearPropInHand()` | Local | 销毁手持道具组件 |
 
-### OnRep_ThrowItemID ✅
+### SetThrowItemID(NewItemID)
 
+```blueprint
+Event SetThrowItemID
+    ↓
+SET ThrowItemID = NewItemID
 ```
-OnRep_ThrowItemID
+
+**说明**：
+- ThrowItemID 是 RepNotify 变量，服务端设置后会自动同步到客户端
+- 客户端收到同步后会触发 OnRep_ThrowItemID
+
+---
+
+### GetThrowItemID()
+
+```blueprint
+Event GetThrowItemID
+    ↓
+Return ThrowItemID
+```
+
+---
+
+### ClearThrowItemID()
+
+```blueprint
+Event ClearThrowItemID
+    ↓
+Switch Has Authority
+    ↓ Authority
+    SET ThrowItemID = DataTableRowHandle(...)
+    SET ThrowItemData = S_ItemData(...)
+```
+
+**说明**：
+- 服务端权限检查（Switch Has Authority）
+- 清空 ThrowItemID 和 ThrowItemData
+- ThrowItemID 的清空会通过 RepNotify 同步到客户端
+
+---
+
+### OnRep_ThrowItemID
+
+**类型**：RepNotify
+
+```blueprint
+Event OnRep_ThrowItemID
     ↓
 Call OnThrowItemChanged (ThrowItemID)
     ↓
-ThrowItemID.RowName != None?
+If (ThrowItemID.RowName != None)
     ├─ True → Get Data Table Row → SET ThrowItemData
     └─ False → SET ThrowItemData = 空结构体
 ```
 
-### Multicast_ShowPropInHand(IsShow) ✅
+**说明**：
+- 当 ThrowItemID 变量同步到客户端时自动触发
+- 触发 OnThrowItemChanged 事件（用于 UI 更新）
+- 根据 ThrowItemID 查表更新 ThrowItemData
 
-**类型**：NetMulticast, Reliable, Executes On All
+### Multicast_ShowPropInHand(IsShow)
+
+**类型**：NetMulticast, Reliable
 
 ```
 IsShow?
@@ -308,7 +326,7 @@ IsShow?
     └─ False → ClearPropInHand()
 ```
 
-### ShowPropInHand ✅
+### ShowPropInHand
 
 ```
 AddComponentByClass (StaticMeshComponent)
@@ -317,17 +335,19 @@ SET PropInHandComp
     ↓
 SetStaticMesh (ThrowItemData.PropMesh)
     ↓
-AttachToComponent (BP_Character.Mesh, Socket_Throw)
+AttachToComponent (BP_Character_Core.Mesh, Socket_Throw)
 ```
 
-### ClearPropInHand ✅
+### ClearPropInHand
 
 ```
-SetStaticMesh (PropInHandComp, None)  ← 先清空 Mesh（立即生效）
-    ↓
-DestroyComponent (PropInHandComp)
-    ↓
-SET PropInHandComp = None
+If (IsValid(PropInHandComp))
+    ↓ True
+    SetStaticMesh (PropInHandComp, None)  ← 先清空 Mesh（立即生效）
+        ↓
+    DestroyComponent (PropInHandComp)
+        ↓
+    SET PropInHandComp = None
 ```
 
 ### Event Dispatchers
@@ -340,6 +360,7 @@ SET PropInHandComp = None
 
 ## 相关文档
 
+- [Comp_Character_Core.md](../../00-通用逻辑/核心类/Comp_Character_Core.md) - Character 组件基类
 - [伤害系统.md](../GAS/伤害系统.md) - GA_Attacked / GE_Damage_Detect
 - [体力系统.md](../GAS/体力系统.md) - Stamina 属性监听
 - [BP_Character_Game.md](../../00-通用逻辑/核心类/BP_Character_Game.md) - 角色基类，档案管理事件监听

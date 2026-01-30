@@ -49,9 +49,9 @@
 | **AIC_Core** | OnPossess → Run Behavior Tree | 自动运行行为树 |
 | **GS_Endurance** | IsRedLight (RepNotify) | Service 读取红绿灯状态 |
 | **SM_Endurance** | 设置 IsRedLight | 状态机控制红绿灯 |
-| **BP_StartLine** | OnOverlap → GE_Started | 添加 Player.State.Started 标签 |
+| **BP_StartLine** | OnOverlap → GE_Start | 添加 Player.State.Started 标签 |
 | **BP_FinishLine** | OnOverlap → 发送 Finished 事件 | 完成检测 |
-| **GAS** | GE_Dead、GE_Started | 添加状态标签 |
+| **GAS** | GE_Dead、GE_Start | 添加状态标签 |
 | **NavMesh** | MoveTo Task | 寻路系统 |
 
 ---
@@ -385,7 +385,7 @@ Root
 **资产依赖**：
 - **AbilitySet_Endurance**：必须包含 GA_Push、GA_Dodge
 - **GE_Dead**：必须添加 Player.State.Dead 标签
-- **GE_Started**：必须添加 Player.State.Started 标签
+- **GE_Start**：必须添加 Player.State.Started 标签
 
 **系统依赖**：
 - **SM_Endurance**：必须正确设置 GS_Endurance.IsRedLight

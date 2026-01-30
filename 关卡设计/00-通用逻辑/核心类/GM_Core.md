@@ -35,7 +35,7 @@ GM 子类通过配置以下变量实现关卡差异化：
 | GM_Logic | Comp_Logic | Comp_PC_Logic | BT_Logic | None | None | SM_Logic (待实现) |
 | GM_Courage | Comp_Courage | Comp_PC_Courage | BT_Courage | None | IMC_Courage | SM_Courage (待实现) |
 | GM_Insight | Comp_Insight | Comp_PC_Insight | BT_Insight | None | None | SM_Insight (待实现) |
-| GM_Sacrifice | Comp_Character_Sacrifice | Comp_PC_Sacrifice | BT_Sacrifice | AbilitySet_Sacrifice | IMC_Sacrifice | SM_Sacrifice (待实现) |
+| GM_Sacrifice | Comp_Character_Sacrifice | Comp_PC_Sacrifice | BT_Sacrifice | AbilitySet_Sacrifice | IMC_Sacrifice | SM_Sacrifice |
 
 ## 关键函数
 
