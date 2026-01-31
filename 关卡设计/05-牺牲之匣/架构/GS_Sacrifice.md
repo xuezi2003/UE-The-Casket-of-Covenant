@@ -4,7 +4,7 @@
 
 **父类**：GS_Core
 
-**实现状态**：✅ 已完成
+**实现状态**：✅ Phase 1 已完成（基础配置 + 观察系统变量）| ⚠️ Phase 3.6 待实现（SwitchToSecondHalf 函数）
 
 ---
 
@@ -45,6 +45,26 @@
 | 函数 | 权限 | 说明 | 实现状态 |
 |------|------|------|----------|
 | OnRep_CanObserve | - | RepNotify 回调，调用 OnCanObserveChanged 广播（Blueprint 中在服务端和客户端都会自动调用） | ✅ 已实现 |
+| SwitchToSecondHalf | Server | 切换到后半段（由 BP_GlassPanel 在玩家踩到中点玻璃时调用） | ⚠️ Phase 3.6 |
+
+### SwitchToSecondHalf (Phase 3.6)
+
+**调用时机**：由 BP_GlassPanel 在玩家踩到中点玻璃时调用
+
+**权限**：仅服务端执行
+
+**逻辑**：
+```
+1. If HasAuthority == false: Return（仅服务端执行）
+2. Get SM_Sacrifice（从 LevelSubSM 组件）
+3. Call SM_Sacrifice.TriggerTransition("ToSecondHalf")（触发状态机转换）
+4. Print Debug Log: "[GS_Sacrifice] 切换到后半段"
+```
+
+**说明**：
+- 此函数由 BP_GlassPanel 在玩家踩到中点玻璃时调用（通过 IsMid 判断）
+- 触发 SM_Sacrifice 从 FirstHalf 状态切换到 SecondHalf 状态
+- SM_Sacrifice 在 SecondHalf 状态的 On State Begin 中设置 `CanObserve = false`
 
 ---
 

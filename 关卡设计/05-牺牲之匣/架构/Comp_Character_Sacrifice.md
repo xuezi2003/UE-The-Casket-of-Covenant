@@ -97,7 +97,7 @@ Comp_Character_Sacrifice 负责关卡5的角色层面逻辑，包括：
 
 - [Comp_Character_Core.md](../../00-通用逻辑/核心类/Comp_Character_Core.md) - Character 组件基类
 - [总体策划.md](../总体策划.md) - 关卡5总体策划
-- [BP_GlassPanel.md](../场景/BP_GlassPanel.md) - 玻璃板（待创建）
+- [BP_GlassPanel.md](../场景/玻璃桥组件/BP_GlassPanel.md) - 玻璃板
 - [推搡系统.md](../GAS/推搡系统.md) - 推搡限制机制（待创建）
 - [金币测试系统.md](../道具/金币测试系统.md) - 金币测试机制（待创建）
 

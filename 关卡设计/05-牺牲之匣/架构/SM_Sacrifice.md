@@ -22,7 +22,7 @@
 | 起始状态 | 目标状态 | 触发条件 | 优先级 |
 |---------|---------|---------|--------|
 | Entry | FirstHalf | 初始状态 | - |
-| FirstHalf | SecondHalf | 居中玻璃对触发器调用 GS_Sacrifice 函数 | 0 |
+| FirstHalf | SecondHalf | 玩家踩到中点玻璃时，BP_GlassPanel 调用 GS_Sacrifice 函数 | 0 |
 | FirstHalf | LevelComplete | 事件：OnLevelShouldEnd | 0 |
 | SecondHalf | LevelComplete | 事件：OnLevelShouldEnd | 0 |
 
@@ -75,7 +75,7 @@ SET Context (保存为变量，供后续使用)
 
 **Transitions**:
 - **Target**: SecondHalf
-  - **Trigger**: 由居中玻璃对触发器调用 GS_Sacrifice 函数触发
+  - **Trigger**: 玩家踩到中点玻璃时，BP_GlassPanel 调用 GS_Sacrifice 函数触发
   - **Priority**: 0
 - **Target**: LevelComplete
   - **Trigger**: 事件 (`OnLevelShouldEnd`)
@@ -134,12 +134,12 @@ SET Context (保存为变量，供后续使用)
 | OnLevelShouldEnd | GS_Core（关卡结束判定） | SecondHalf → LevelComplete 转换 |
 
 > [!NOTE]
-> **FirstHalf → SecondHalf 转换**：由居中玻璃对的触发器直接调用 GS_Sacrifice 的函数触发，不使用 GameplayTag 事件。
+> **FirstHalf → SecondHalf 转换**：玩家踩到中点玻璃时，BP_GlassPanel 直接调用 GS_Sacrifice 的函数触发，不使用 GameplayTag 事件。
 
 ## 相关文档
 
 - [SM_LevelFlow_Main.md](../../00-通用逻辑/核心类/SM_LevelFlow_Main.md) - 主流程状态机
 - [GS_Sacrifice.md](GS_Sacrifice.md) - GameState（CanObserve 变量）
 - [总体策划.md](../总体策划.md) - 观察系统设计
-- [BP_GlassPair.md](../场景/BP_GlassPair.md) - 玻璃对（居中触发器，待创建）
+- [BP_GlassPanel.md](../场景/玻璃桥组件/BP_GlassPanel.md) - 单块玻璃板（Phase 3.6 判断是否为中点玻璃）
 
